@@ -1,0 +1,8 @@
+{
+  "name": "l33-tutorials",
+  "version": "1.0.0",
+  "description": "Level 33 Mastermind — Programmed Learning Machine",
+  "dependencies": {
+    "stripe": "^14.21.0"
+  }
+}

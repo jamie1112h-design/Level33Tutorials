@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Level 33 Mastermind — Programmed Learning Machine</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment:   #f5f0e8;
+    --parchment2:  #ede7d9;
+    --ink:         #2a1f0e;
+    --ink-light:   #3a2a10;
+    --gold:        #b8965a;
+    --gold-dark:   #9a7a45;
+    --gold-deeper: #7a6030;
+    --cream-card:  rgba(255,255,255,0.62);
+    --green:       #5a8a4a;
+    --red:         #a04040;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--parchment);
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+  }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--parchment) 0%, var(--parchment2) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(180,140,80,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(120,80,40,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pageIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes spin   { to { transform: rotate(360deg); } }
+
+  /* ── KEY SCREEN ── */
+  #keyScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .logo-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: 0.12em;
+    margin-bottom: 2.8rem;
+  }
+
+  .key-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .key-sub {
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #6b5535;
+    margin-bottom: 2rem;
+  }
+
+  .divider {
+    width: 50px;
+    height: 1px;
+    background: var(--gold);
+    margin: 0 auto 2rem;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 0.6rem;
+    text-align: left;
+  }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 0.95rem 1.1rem;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--ink);
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(155,120,65,0.3);
+    border-radius: 2px;
+    outline: none;
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+  }
+
+  input:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 0 0 3px rgba(184,150,90,0.12);
+  }
+
+  .error-msg {
+    color: #8b2020;
+    font-size: 0.88rem;
+    font-style: italic;
+    margin-bottom: 0.8rem;
+    min-height: 1.2rem;
+  }
+
+  /* ── BUTTONS ── */
+  button {
+    cursor: pointer;
+    border: none;
+    font-family: 'Playfair Display', serif;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 2.4rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: #3d2b0e;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #5a3f18;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(60,40,10,0.2);
+  }
+
+  .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.8rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    background: transparent;
+    border: 1px solid rgba(155,120,65,0.4);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(155,120,65,0.08);
+    transform: translateY(-1px);
+  }
+
+  /* ── INTRO SCREEN ── */
+  #introScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .intro-logo    { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.4rem; }
+  .intro-brand   { font-family:'Playfair Display',serif; font-size:1rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:2.5rem; }
+  .intro-title   { font-family:'Playfair Display',serif; font-size:2.9rem; font-weight:400; color:var(--ink); line-height:1.18; margin-bottom:0.6rem; }
+  .intro-sub     { font-size:1.15rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:2.2rem; }
+  .intro-note    { font-size:0.85rem; font-weight:300; color:#8a7050; margin-bottom:1.6rem; }
+
+  /* ── COURSE OPTIONS ── */
+  .course-options {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  /* Lesson length slider */
+  .option-group {
+    text-align: left;
+  }
+
+  .option-group-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+  }
+
+  .option-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .option-value span {
+    font-size: 0.72rem;
+    font-weight: 400;
+    font-family: 'Crimson Pro', serif;
+    color: var(--gold-dark);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-left: 0.25rem;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 2px;
+    background: rgba(155,120,65,0.25);
+    border-radius: 1px;
+    outline: none;
+    margin: 0;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold-dark);
+    border: 2px solid var(--parchment);
+    box-shadow: 0 1px 6px rgba(60,40,10,0.22);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold-dark);
+    border: 2px solid var(--parchment);
+    box-shadow: 0 1px 6px rgba(60,40,10,0.22);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  input[type="range"]:hover::-webkit-slider-thumb {
+    transform: scale(1.15);
+    box-shadow: 0 2px 10px rgba(60,40,10,0.3);
+  }
+
+  .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.45rem;
+    padding: 0 1px;
+  }
+
+  .slider-ticks span {
+    font-size: 0.65rem;
+    color: rgba(107,85,53,0.55);
+    letter-spacing: 0.05em;
+    font-family: 'Crimson Pro', serif;
+  }
+
+  /* Level pills */
+  .level-pills {
+    display: flex;
+    gap: 0;
+    border: 1px solid rgba(155,120,65,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .level-pill {
+    flex: 1;
+    padding: 0.72rem 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    background: rgba(255,255,255,0.5);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.18s;
+    border-right: 1px solid rgba(155,120,65,0.2);
+    position: relative;
+  }
+
+  .level-pill:last-child { border-right: none; }
+
+  .level-pill:hover:not(.active) {
+    background: rgba(184,150,90,0.1);
+    color: var(--gold-deeper);
+  }
+
+  .level-pill.active {
+    background: #3d2b0e;
+    color: var(--parchment);
+    font-weight: 600;
+  }
+
+  /* settings summary badge */
+  .settings-summary {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(107,85,53,0.6);
+    margin-bottom: 1.4rem;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    transition: opacity 0.3s;
+  }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+  }
+
+  .spinner {
+    width: 38px; height: 38px;
+    border: 2px solid rgba(155,120,65,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .loading-text {
+    font-size: 0.95rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #6b5535;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── BOOK SCREEN ── */
+  #bookScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 1rem;
+  }
+
+  .book-wrap { width: 100%; max-width: 700px; }
+
+  /* session badge inside book */
+  .session-badge {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .badge-pill {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    background: rgba(184,150,90,0.1);
+    border: 1px solid rgba(155,120,65,0.22);
+    border-radius: 20px;
+    padding: 0.28rem 0.85rem;
+    font-family: 'Crimson Pro', serif;
+  }
+
+  .progress-bar {
+    width: 100%; height: 2px;
+    background: rgba(155,120,65,0.15);
+    border-radius: 1px;
+    margin-bottom: 2.2rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), #c8a86a);
+    border-radius: 1px;
+    transition: width 0.5s ease;
+  }
+
+  .page-counter {
+    font-size: 0.68rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 1.8rem;
+  }
+
+  .card {
+    background: var(--cream-card);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(155,120,65,0.18);
+    border-radius: 4px;
+    padding: 2.8rem 3.2rem;
+    box-shadow: 0 8px 40px rgba(60,40,10,0.08), 0 1px 0 rgba(255,255,255,0.8) inset;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: pageIn 0.32s ease;
+  }
+
+  .frame-type {
+    font-size: 0.64rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+  }
+  .frame-type.review { color: var(--gold-deeper); }
+
+  .lesson-text {
+    font-size: 1.22rem;
+    font-weight: 300;
+    line-height: 1.78;
+    color: var(--ink);
+    flex: 1;
+    margin-bottom: 2rem;
+  }
+  .lesson-text strong { font-weight: 600; color: #1a1008; }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.18rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.55;
+    margin-bottom: 1.6rem;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.6rem; }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 0.82rem 1.1rem;
+    border: 1px solid rgba(155,120,65,0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.4);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--ink-light);
+    line-height: 1.45;
+    text-align: left;
+    width: 100%;
+    transition: all 0.16s;
+  }
+  .option:hover { background: rgba(184,150,90,0.1); border-color: rgba(155,120,65,0.4); }
+  .option.selected { border-color: var(--gold); background: rgba(184,150,90,0.12); }
+  .option.correct  { border-color: var(--green); background: rgba(90,138,74,0.1); cursor: default; }
+  .option.wrong    { border-color: var(--red);   background: rgba(160,64,64,0.07); opacity: 0.6; cursor: default; }
+
+  .opt-letter { font-family:'Playfair Display',serif; font-size:0.84rem; font-weight:600; color:var(--gold-dark); min-width:18px; padding-top:1px; }
+  .option.correct .opt-letter { color: var(--green); }
+  .option.wrong   .opt-letter { color: var(--red); }
+
+  .answer-box {
+    border-left: 3px solid var(--gold);
+    padding: 1rem 1.3rem;
+    margin-bottom: 1.6rem;
+    background: rgba(184,150,90,0.06);
+    border-radius: 0 2px 2px 0;
+  }
+  .answer-label { font-size:0.63rem; letter-spacing:0.38em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.45rem; }
+  .answer-text  { font-size:1.04rem; font-weight:300; font-style:italic; color:var(--ink); line-height:1.65; }
+
+  .btn-row { display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: auto; }
+
+  /* ── COMPLETE ── */
+  #completeScreen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .complete-wrap { max-width: 620px; width: 100%; }
+
+  .complete-card {
+    background: var(--cream-card);
+    border: 1px solid rgba(155,120,65,0.18);
+    border-radius: 4px;
+    padding: 3rem 3.2rem;
+    box-shadow: 0 8px 40px rgba(60,40,10,0.08);
+  }
+
+  .complete-title { font-family:'Playfair Display',serif; font-size:2rem; font-weight:400; color:var(--ink); margin-bottom:0.6rem; }
+  .complete-sub   { font-size:1.08rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:2rem; }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    .card { padding: 1.8rem 1.4rem; }
+    .intro-title { font-size: 2rem; }
+    .course-options { gap: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 1 — API KEY ENTRY
+═══════════════════════════════════════════════════════ -->
+<div id="keyScreen" class="screen active">
+  <div class="logo-mark">Level 33 Mastermind</div>
+  <div class="brand-title">Programmed Learning Machine</div>
+
+  <h2 class="key-heading">Begin Your Session</h2>
+  <p class="key-sub">Enter your access code to unlock the Learning Machine.</p>
+  <div class="divider"></div>
+
+  <label class="field-label" for="keyInput">Access Code</label>
+  <input type="password" id="keyInput" placeholder="L33-XXXX-XXXX" autocomplete="off" />
+
+  <div class="error-msg" id="keyError"></div>
+
+  <button class="btn-primary" id="keySubmitBtn" disabled>
+    Open the Gate &nbsp;→
+  </button>
+
+  <p style="margin-top:1.6rem;font-size:0.82rem;font-weight:300;font-style:italic;color:#8a7050;">
+    Don't have an access code?
+    <a href="YOUR_STRIPE_PAYMENT_LINK_HERE" target="_blank"
+       style="color:var(--gold-dark);text-decoration:none;border-bottom:1px solid rgba(155,120,65,0.4);">
+      Subscribe here &nbsp;→
+    </a>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 2 — SUBJECT INTRO
+═══════════════════════════════════════════════════════ -->
+<div id="introScreen" class="screen">
+  <div class="intro-logo">Level 33 Mastermind</div>
+  <div class="intro-brand">Programmed Learning Machine</div>
+
+  <h1 class="intro-title">What would you<br/>like to learn today?</h1>
+  <p class="intro-sub">One idea at a time. One question at a time.</p>
+  <div class="divider"></div>
+
+  <label class="field-label" for="subjectInput" style="max-width:480px; width:100%; text-align:left;">Subject</label>
+  <input type="text" id="subjectInput"
+    placeholder="e.g. Molarity, The French Revolution, Options Trading…"
+    style="max-width:480px; margin: 0 auto 1.6rem;" />
+
+  <!-- ── COURSE OPTIONS ── -->
+  <div class="course-options">
+
+    <!-- Lesson Length -->
+    <div class="option-group">
+      <div class="option-group-header">
+        <label class="field-label" style="margin-bottom:0;" for="frameSlider">Lesson Length</label>
+        <div class="option-value" id="frameCountDisplay">10 <span>frames</span></div>
+      </div>
+      <input type="range" id="frameSlider" min="5" max="20" step="1" value="10" />
+      <div class="slider-ticks">
+        <span>5</span>
+        <span>8</span>
+        <span>10</span>
+        <span>13</span>
+        <span>16</span>
+        <span>20</span>
+      </div>
+    </div>
+
+    <!-- Learning Level -->
+    <div class="option-group">
+      <label class="field-label" style="margin-bottom:0.65rem;">Learning Level</label>
+      <div class="level-pills">
+        <button class="level-pill" data-level="beginner">Beginner</button>
+        <button class="level-pill active" data-level="intermediate">Intermediate</button>
+        <button class="level-pill" data-level="advanced">Advanced</button>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="settings-summary" id="settingsSummary">10-frame · Intermediate course</p>
+
+  <div class="error-msg" id="introError"></div>
+
+  <button class="btn-primary" id="startBtn" disabled>Open the Book &nbsp;→</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 3 — LOADING
+═══════════════════════════════════════════════════════ -->
+<div id="loadingScreen" class="screen">
+  <div class="spinner"></div>
+  <p class="loading-text" id="loadingText">Composing your course…</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 4 — BOOK (injected dynamically)
+═══════════════════════════════════════════════════════ -->
+<div id="bookScreen" class="screen">
+  <div class="book-wrap">
+    <div class="session-badge">
+      <div class="badge-pill" id="sessionLevel"></div>
+      <div class="badge-pill" id="sessionFrames"></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="page-counter" id="pageCounter"></div>
+    <div class="card" id="card"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN 5 — COMPLETE
+═══════════════════════════════════════════════════════ -->
+<div id="completeScreen" class="screen">
+  <div class="complete-wrap">
+    <div class="complete-card">
+      <div class="frame-type" style="text-align:center; margin-bottom:1.4rem;">Course Complete</div>
+      <h2 class="complete-title">You've finished the book.</h2>
+      <p class="complete-sub" id="completeSubText"></p>
+      <div class="btn-row" style="justify-content:center; gap:1rem;">
+        <button class="btn-ghost" id="newSubjectBtn">New Subject</button>
+        <button class="btn-primary" id="restartBtn">Start Over</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let accessCode   = "";
+let frames       = [];
+let frameIdx     = 0;
+let pageType     = "lesson";   // lesson | question | answer
+let selected     = null;
+let subject      = "";
+let lessonCount  = 10;
+let learningLevel = "intermediate";
+
+const LETTERS = ["A","B","C","D"];
+
+// ── localStorage auto-login ───────────────────────────────────────────────────
+// If a saved access code exists from a previous session on this device,
+// skip the code entry screen and go straight to the subject screen.
+(function checkSavedCode() {
+  const saved = localStorage.getItem("l33_access_code");
+  if (saved && saved.trim().length > 0) {
+    accessCode = saved.trim().toUpperCase();
+    // Show intro screen directly — the code will be validated server-side
+    // on the first course generation attempt
+    showScreen("introScreen");
+    const subInput = document.getElementById("subjectInput");
+    if (subInput) subInput.focus();
+  }
+})();
+
+// ── Utility ──────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => {
+    s.classList.remove("active");
+    s.style.display = "none";
+  });
+  const el = document.getElementById(id);
+  el.style.display = "flex";
+  void el.offsetWidth;
+  el.classList.add("active");
+}
+
+function parseJSON(text) {
+  const start = text.indexOf("[");
+  const end   = text.lastIndexOf("]");
+  if (start === -1 || end === -1) throw new Error("No JSON array found in response.");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+// ── Dynamic frame phase guide ─────────────────────────────────────────────────
+function buildFrameGuide(n) {
+  const introEnd  = Math.max(1, Math.ceil(n * 0.33));
+  const buildEnd  = Math.max(introEnd + 1, Math.ceil(n * 0.62));
+  const advEnd    = Math.max(buildEnd + 1, Math.ceil(n * 0.82));
+  const reviewStart = advEnd + 1;
+
+  let guide = `Frames 1–${introEnd}: introduce foundational concepts. `;
+
+  if (buildEnd > introEnd) {
+    guide += `Frames ${introEnd + 1}–${buildEnd}: build on them with more detail. `;
+  }
+  if (advEnd > buildEnd) {
+    guide += `Frames ${buildEnd + 1}–${advEnd}: introduce slightly more advanced points. `;
+  }
+  if (reviewStart <= n) {
+    guide += `Frames ${reviewStart}–${n}: REVIEW frames that revisit earlier concepts with different wording or values. Mark these with "is_review": true.`;
+  }
+
+  return guide;
+}
+
+// ── Level instructions ────────────────────────────────────────────────────────
+function levelInstructions(level) {
+  switch (level) {
+    case "beginner":
+      return "Use simple, everyday language. Assume no prior knowledge of the topic. Define every technical term the first time it appears. Use relatable analogies and everyday examples. Sentences should be short and clear.";
+    case "advanced":
+      return "Use precise technical language appropriate to an expert audience. Assume solid prior knowledge of the subject area. Explore nuance, edge cases, and deeper mechanisms. Do not over-explain foundational concepts.";
+    default: // intermediate
+      return "Use standard subject terminology. Assume basic familiarity with related concepts. Balance clarity with depth. Briefly define specialized terms but do not dwell on basics.";
+  }
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function generateCourse(subj, count, level) {
+  const frameGuide = buildFrameGuide(count);
+  const levelNote  = levelInstructions(level);
+  const levelLabel = level.charAt(0).toUpperCase() + level.slice(1);
+
+  const prompt = `You are an expert educator using the Skinner programmed instruction method.
+Create exactly ${count} learning frames on the subject: "${subj}".
+Target audience level: ${levelLabel}.
+
+Tone & language: ${levelNote}
+
+Frame structure guide: ${frameGuide}
+
+Rules:
+- Each frame has a micro-lesson (2–4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1–2 sentence explanation.
+- Keep all frame content calibrated to the ${levelLabel} level throughout.
+- Bold key terms using **double asterisks**.
+- Any frame marked is_review: true should revisit an earlier concept with fresh wording, different values, or a new angle — not simply repeat it.
+
+Return ONLY a valid JSON array, no preamble, no markdown fences. Format:
+[
+  {
+    "frame": 1,
+    "is_review": false,
+    "lesson": "...",
+    "question": "...",
+    "options": ["...", "...", "...", "..."],
+    "correct_index": 0,
+    "explanation": "..."
+  }
+]`;
+
+  const res = await fetch("/.netlify/functions/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      accessCode:  accessCode,
+      model:       "claude-haiku-4-5-20251001",
+      max_tokens:  6000,
+      messages:    [{ role: "user", content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = (data.content || []).map(b => b.text || "").join("");
+  return parseJSON(text);
+}
+
+// ── Progress ─────────────────────────────────────────────────────────────────
+function updateProgress() {
+  const total  = frames.length * 3;
+  const done   = frameIdx * 3 + (pageType === "lesson" ? 0 : pageType === "question" ? 1 : 2);
+  const pct    = total ? (done / total) * 100 : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+
+  const frame = frames[frameIdx];
+  const reviewTag = frame && frame.is_review ? "  ·  Review" : "";
+  document.getElementById("pageCounter").textContent =
+    `Frame ${frameIdx + 1} of ${frames.length}${reviewTag}`;
+}
+
+// ── Render Card ───────────────────────────────────────────────────────────────
+function renderCard() {
+  const card  = document.getElementById("card");
+  const frame = frames[frameIdx];
+  if (!frame) return;
+
+  updateProgress();
+
+  const reviewClass = frame.is_review ? " review" : "";
+  const reviewLabel = frame.is_review ? "✦ Review" : `Lesson ${frameIdx + 1}`;
+
+  let html = "";
+
+  if (pageType === "lesson") {
+    const lessonHTML = frame.lesson.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    html = `
+      <div>
+        <div class="frame-type${reviewClass}">${reviewLabel}</div>
+        <p class="lesson-text">${lessonHTML}</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="actionBtn">Continue &nbsp;→</button>
+      </div>`;
+
+  } else if (pageType === "question") {
+    const optionsHTML = frame.options.map((opt, i) => `
+      <button class="option${selected === i ? " selected" : ""}" data-idx="${i}">
+        <span class="opt-letter">${LETTERS[i]}</span>
+        <span>${opt}</span>
+      </button>`).join("");
+
+    html = `
+      <div>
+        <div class="frame-type">Question</div>
+        <p class="question-text">${frame.question}</p>
+        <div class="options">${optionsHTML}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="actionBtn" ${selected === null ? "disabled" : ""}>
+          Check Answer &nbsp;→
+        </button>
+      </div>`;
+
+  } else {
+    const optionsHTML = frame.options.map((opt, i) => {
+      const isCorrect  = i === frame.correct_index;
+      const isSelected = i === selected;
+      let cls = "option";
+      if (isCorrect)                     cls += " correct";
+      else if (isSelected && !isCorrect) cls += " wrong";
+      return `
+        <div class="${cls}">
+          <span class="opt-letter">${LETTERS[i]}</span>
+          <span>${opt}</span>
+        </div>`;
+    }).join("");
+
+    const isLast  = frameIdx + 1 >= frames.length;
+    const btnText = isLast ? "Complete Course" : "Next Lesson &nbsp;→";
+
+    html = `
+      <div>
+        <div class="frame-type">Answer</div>
+        <div class="options" style="margin-bottom:1.1rem;">${optionsHTML}</div>
+        <div class="answer-box">
+          <div class="answer-label">Explanation</div>
+          <p class="answer-text">${frame.explanation}</p>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="actionBtn">${btnText}</button>
+      </div>`;
+  }
+
+  card.innerHTML = html;
+
+  document.getElementById("actionBtn")?.addEventListener("click", handleAction);
+
+  if (pageType === "question") {
+    card.querySelectorAll(".option").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selected = parseInt(btn.dataset.idx, 10);
+        renderCard();
+      });
+    });
+  }
+}
+
+function handleAction() {
+  if (pageType === "lesson") {
+    pageType = "question";
+    selected = null;
+    renderCard();
+  } else if (pageType === "question") {
+    if (selected === null) return;
+    pageType = "answer";
+    renderCard();
+  } else {
+    if (frameIdx + 1 >= frames.length) {
+      const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+      document.getElementById("completeSubText").textContent =
+        `"${subject}" — ${frames.length} frames mastered · ${levelLabel} level.`;
+      showScreen("completeScreen");
+    } else {
+      frameIdx++;
+      pageType  = "lesson";
+      selected  = null;
+      renderCard();
+    }
+  }
+}
+
+// ── Flow ──────────────────────────────────────────────────────────────────────
+async function startCourse(subj) {
+  subject = subj.trim();
+  const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+  document.getElementById("loadingText").textContent =
+    `Composing your ${lessonCount}-frame ${levelLabel} course on "${subject}"…`;
+  showScreen("loadingScreen");
+
+  try {
+    frames   = await generateCourse(subject, lessonCount, learningLevel);
+    frameIdx = 0;
+    pageType = "lesson";
+    selected = null;
+
+    // populate session badges
+    document.getElementById("sessionLevel").textContent  = levelLabel;
+    document.getElementById("sessionFrames").textContent = `${frames.length} frames`;
+
+    showScreen("bookScreen");
+    renderCard();
+  } catch (e) {
+    document.getElementById("introError").textContent = e.message || "Could not generate course. Please try again.";
+    showScreen("introScreen");
+  }
+}
+
+// ── Settings Summary updater ──────────────────────────────────────────────────
+function updateSettingsSummary() {
+  const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+  document.getElementById("settingsSummary").textContent =
+    `${lessonCount}-frame · ${levelLabel} course`;
+}
+
+// ── KEY SCREEN ────────────────────────────────────────────────────────────────
+const keyInput     = document.getElementById("keyInput");
+const keySubmitBtn = document.getElementById("keySubmitBtn");
+const keyError     = document.getElementById("keyError");
+
+keyInput.addEventListener("input", () => {
+  keySubmitBtn.disabled = keyInput.value.trim().length === 0;
+  keyError.textContent = "";
+});
+
+keyInput.addEventListener("keydown", e => { if (e.key === "Enter") submitKey(); });
+keySubmitBtn.addEventListener("click", submitKey);
+
+function submitKey() {
+  const val = keyInput.value.trim();
+  if (!val) return;
+  accessCode = val.toUpperCase();
+  // Save to localStorage so returning users skip this screen
+  localStorage.setItem("l33_access_code", accessCode);
+  showScreen("introScreen");
+  document.getElementById("subjectInput").focus();
+}
+
+// ── INTRO SCREEN ──────────────────────────────────────────────────────────────
+const subjectInput = document.getElementById("subjectInput");
+const startBtn     = document.getElementById("startBtn");
+const introError   = document.getElementById("introError");
+const frameSlider  = document.getElementById("frameSlider");
+
+subjectInput.addEventListener("input", () => {
+  startBtn.disabled = subjectInput.value.trim().length === 0;
+  introError.textContent = "";
+});
+
+subjectInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && subjectInput.value.trim()) {
+    startCourse(subjectInput.value);
+  }
+});
+
+startBtn.addEventListener("click", () => {
+  if (subjectInput.value.trim()) startCourse(subjectInput.value);
+});
+
+// Slider
+frameSlider.addEventListener("input", () => {
+  lessonCount = parseInt(frameSlider.value, 10);
+  document.getElementById("frameCountDisplay").innerHTML =
+    `${lessonCount} <span>frames</span>`;
+  updateSettingsSummary();
+});
+
+// Level pills
+document.querySelectorAll(".level-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll(".level-pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    learningLevel = pill.dataset.level;
+    updateSettingsSummary();
+  });
+});
+
+// ── COMPLETE SCREEN ───────────────────────────────────────────────────────────
+document.getElementById("newSubjectBtn").addEventListener("click", () => {
+  subjectInput.value = "";
+  startBtn.disabled  = true;
+  introError.textContent = "";
+  showScreen("introScreen");
+  subjectInput.focus();
+});
+
+document.getElementById("restartBtn").addEventListener("click", () => {
+  keyInput.value        = "";
+  keySubmitBtn.disabled = true;
+  keyError.textContent  = "";
+  accessCode            = "";
+  localStorage.removeItem("l33_access_code");
+  showScreen("keyScreen");
+  keyInput.focus();
+});
+</script>
+</body>
+</html>
