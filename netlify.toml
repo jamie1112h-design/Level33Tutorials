@@ -6,9 +6,8 @@
   node_bundler = "esbuild"
   included_files = ["netlify/functions/**"]
 
+[functions.keepalive]
+  schedule = "@daily"
+
 [build.environment]
   SECRETS_SCAN_ENABLED = "false"
-
-[[functions]]
-  name = "keepalive"
-  schedule = "@daily"
