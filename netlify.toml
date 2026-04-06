@@ -8,3 +8,7 @@
 
 [build.environment]
   SECRETS_SCAN_ENABLED = "false"
+
+[[functions]]
+  name = "keepalive"
+  schedule = "@daily"
