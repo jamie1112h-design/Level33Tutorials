@@ -148,10 +148,20 @@
 
   .error-msg {
     color: #8b2020;
-    font-size: 0.88rem;
+    font-size: 1rem;
     font-style: italic;
+    font-weight: 400;
     margin-bottom: 0.8rem;
-    min-height: 1.2rem;
+    min-height: 1.4rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.2s, padding 0.2s;
+  }
+
+  .error-msg:not(:empty) {
+    background: rgba(139,32,32,0.07);
+    border-left: 3px solid #8b2020;
   }
 
   /* ── BUTTONS ── */
@@ -312,7 +322,7 @@
     font-family: 'Crimson Pro', serif;
   }
 
-  /* Level pills */
+  /* ── LEVEL PILLS (Difficulty — 3-up row) ── */
   .level-pills {
     display: flex;
     gap: 0;
@@ -346,6 +356,49 @@
   }
 
   .level-pill.active {
+    background: #3d2b0e;
+    color: var(--parchment);
+    font-weight: 600;
+  }
+
+  /* ── EDU PILLS (Educational Level — 2×2 grid) ── */
+  .edu-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid rgba(155,120,65,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .edu-pill {
+    padding: 0.72rem 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    background: rgba(255,255,255,0.5);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* inner grid borders */
+  .edu-pill:nth-child(1) { border-right: 1px solid rgba(155,120,65,0.2); border-bottom: 1px solid rgba(155,120,65,0.2); }
+  .edu-pill:nth-child(2) { border-bottom: 1px solid rgba(155,120,65,0.2); }
+  .edu-pill:nth-child(3) { border-right: 1px solid rgba(155,120,65,0.2); }
+  .edu-pill:nth-child(4) { /* no extra borders */ }
+
+  .edu-pill:hover:not(.active) {
+    background: rgba(184,150,90,0.1);
+    color: var(--gold-deeper);
+  }
+
+  .edu-pill.active {
     background: #3d2b0e;
     color: var(--parchment);
     font-weight: 600;
@@ -403,6 +456,7 @@
     justify-content: center;
     gap: 1.2rem;
     margin-bottom: 1.2rem;
+    flex-wrap: wrap;
   }
 
   .badge-pill {
@@ -619,6 +673,17 @@
       </div>
     </div>
 
+    <!-- Educational Level -->
+    <div class="option-group">
+      <label class="field-label" style="margin-bottom:0.65rem;">Educational Level</label>
+      <div class="edu-pills">
+        <button class="edu-pill" data-edu="elementary">Elementary</button>
+        <button class="edu-pill" data-edu="middle_school">Middle School</button>
+        <button class="edu-pill" data-edu="high_school" >High School</button>
+        <button class="edu-pill" data-edu="college"     >College +</button>
+      </div>
+    </div>
+
     <!-- Learning Level -->
     <div class="option-group">
       <label class="field-label" style="margin-bottom:0.65rem;">Learning Level</label>
@@ -652,6 +717,7 @@
 <div id="bookScreen" class="screen">
   <div class="book-wrap">
     <div class="session-badge">
+      <div class="badge-pill" id="sessionEdu"></div>
       <div class="badge-pill" id="sessionLevel"></div>
       <div class="badge-pill" id="sessionFrames"></div>
     </div>
@@ -680,26 +746,31 @@
 
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
-let accessCode   = "";
-let frames       = [];
-let frameIdx     = 0;
-let pageType     = "lesson";   // lesson | question | answer
-let selected     = null;
-let subject      = "";
-let lessonCount  = 10;
+let accessCode    = "";
+let frames        = [];
+let frameIdx      = 0;
+let pageType      = "lesson";   // lesson | question | answer
+let selected      = null;
+let subject       = "";
+let lessonCount   = 10;
 let learningLevel = "intermediate";
+let educationLevel = "";        // empty until user selects
 
 const LETTERS = ["A","B","C","D"];
 
+// ── Educational level display labels ─────────────────────────────────────────
+const EDU_LABELS = {
+  elementary:   "Elementary",
+  middle_school:"Middle School",
+  high_school:  "High School",
+  college:      "College +"
+};
+
 // ── localStorage auto-login ───────────────────────────────────────────────────
-// If a saved access code exists from a previous session on this device,
-// skip the code entry screen and go straight to the subject screen.
 (function checkSavedCode() {
   const saved = localStorage.getItem("l33_access_code");
   if (saved && saved.trim().length > 0) {
     accessCode = saved.trim().toUpperCase();
-    // Show intro screen directly — the code will be validated server-side
-    // on the first course generation attempt
     showScreen("introScreen");
     const subInput = document.getElementById("subjectInput");
     if (subInput) subInput.focus();
@@ -727,55 +798,67 @@ function parseJSON(text) {
 
 // ── Dynamic frame phase guide ─────────────────────────────────────────────────
 function buildFrameGuide(n) {
-  const introEnd  = Math.max(1, Math.ceil(n * 0.33));
-  const buildEnd  = Math.max(introEnd + 1, Math.ceil(n * 0.62));
-  const advEnd    = Math.max(buildEnd + 1, Math.ceil(n * 0.82));
+  const introEnd    = Math.max(1, Math.ceil(n * 0.33));
+  const buildEnd    = Math.max(introEnd + 1, Math.ceil(n * 0.62));
+  const advEnd      = Math.max(buildEnd + 1, Math.ceil(n * 0.82));
   const reviewStart = advEnd + 1;
 
   let guide = `Frames 1–${introEnd}: introduce foundational concepts. `;
-
-  if (buildEnd > introEnd) {
-    guide += `Frames ${introEnd + 1}–${buildEnd}: build on them with more detail. `;
-  }
-  if (advEnd > buildEnd) {
-    guide += `Frames ${buildEnd + 1}–${advEnd}: introduce slightly more advanced points. `;
-  }
-  if (reviewStart <= n) {
-    guide += `Frames ${reviewStart}–${n}: REVIEW frames that revisit earlier concepts with different wording or values. Mark these with "is_review": true.`;
-  }
-
+  if (buildEnd > introEnd) guide += `Frames ${introEnd + 1}–${buildEnd}: build on them with more detail. `;
+  if (advEnd > buildEnd)   guide += `Frames ${buildEnd + 1}–${advEnd}: introduce slightly more advanced points. `;
+  if (reviewStart <= n)    guide += `Frames ${reviewStart}–${n}: REVIEW frames that revisit earlier concepts with different wording or values. Mark these with "is_review": true.`;
   return guide;
 }
 
-// ── Level instructions ────────────────────────────────────────────────────────
+// ── Difficulty level instructions ────────────────────────────────────────────
 function levelInstructions(level) {
   switch (level) {
     case "beginner":
       return "Use simple, everyday language. Assume no prior knowledge of the topic. Define every technical term the first time it appears. Use relatable analogies and everyday examples. Sentences should be short and clear.";
     case "advanced":
       return "Use precise technical language appropriate to an expert audience. Assume solid prior knowledge of the subject area. Explore nuance, edge cases, and deeper mechanisms. Do not over-explain foundational concepts.";
-    default: // intermediate
+    default:
       return "Use standard subject terminology. Assume basic familiarity with related concepts. Balance clarity with depth. Briefly define specialized terms but do not dwell on basics.";
   }
 }
 
+// ── Educational level instructions ───────────────────────────────────────────
+function eduInstructions(edu) {
+  switch (edu) {
+    case "elementary":
+      return "The learner is an elementary school student (ages 6–11). Use short sentences, simple everyday words, and concrete examples from daily life. Avoid jargon entirely. Use encouraging, warm language. Analogies should involve familiar things like toys, food, or family.";
+    case "middle_school":
+      return "The learner is a middle school student (ages 11–14). Use clear, accessible language with moderate vocabulary. Introduce subject-specific terms but always explain them plainly. Examples should feel relevant to a young teen's world. Keep explanations focused and engaging.";
+    case "high_school":
+      return "The learner is a high school student (ages 14–18). Use standard academic language. Assume basic subject familiarity. Introduce and define technical terms properly. Examples can draw on school subjects, current events, or real-world applications.";
+    case "college":
+      return "The learner is at college level or beyond (age 18+). Use full academic and technical vocabulary for the subject area. Assume strong foundational knowledge. Engage with complexity, nuance, and real-world professional or scholarly applications.";
+    default:
+      return "";
+  }
+}
+
 // ── API ───────────────────────────────────────────────────────────────────────
-async function generateCourse(subj, count, level) {
-  const frameGuide = buildFrameGuide(count);
-  const levelNote  = levelInstructions(level);
-  const levelLabel = level.charAt(0).toUpperCase() + level.slice(1);
+async function generateCourse(subj, count, level, edu) {
+  const frameGuide  = buildFrameGuide(count);
+  const levelNote   = levelInstructions(level);
+  const eduNote     = edu ? eduInstructions(edu) : "";
+  const levelLabel  = level.charAt(0).toUpperCase() + level.slice(1);
+  const eduLabel    = edu ? EDU_LABELS[edu] : "";
+
+  const audienceNote = eduNote
+    ? `Educational level: ${eduLabel}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`
+    : `Difficulty calibration: ${levelNote}`;
 
   const prompt = `You are an expert educator using the Skinner programmed instruction method.
 Create exactly ${count} learning frames on the subject: "${subj}".
-Target audience level: ${levelLabel}.
-
-Tone & language: ${levelNote}
+${audienceNote}
 
 Frame structure guide: ${frameGuide}
 
 Rules:
 - Each frame has a micro-lesson (2–4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1–2 sentence explanation.
-- Keep all frame content calibrated to the ${levelLabel} level throughout.
+- Keep all frame content calibrated to the specified educational level and difficulty throughout.
 - Bold key terms using **double asterisks**.
 - Any frame marked is_review: true should revisit an earlier concept with fresh wording, different values, or a new angle — not simply repeat it.
 
@@ -794,9 +877,7 @@ Return ONLY a valid JSON array, no preamble, no markdown fences. Format:
 
   const res = await fetch("/.netlify/functions/generate", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       accessCode:  accessCode,
       model:       "claude-haiku-4-5-20251001",
@@ -817,9 +898,9 @@ Return ONLY a valid JSON array, no preamble, no markdown fences. Format:
 
 // ── Progress ─────────────────────────────────────────────────────────────────
 function updateProgress() {
-  const total  = frames.length * 3;
-  const done   = frameIdx * 3 + (pageType === "lesson" ? 0 : pageType === "question" ? 1 : 2);
-  const pct    = total ? (done / total) * 100 : 0;
+  const total = frames.length * 3;
+  const done  = frameIdx * 3 + (pageType === "lesson" ? 0 : pageType === "question" ? 1 : 2);
+  const pct   = total ? (done / total) * 100 : 0;
   document.getElementById("progressFill").style.width = pct + "%";
 
   const frame = frames[frameIdx];
@@ -903,7 +984,6 @@ function renderCard() {
   }
 
   card.innerHTML = html;
-
   document.getElementById("actionBtn")?.addEventListener("click", handleAction);
 
   if (pageType === "question") {
@@ -928,13 +1008,14 @@ function handleAction() {
   } else {
     if (frameIdx + 1 >= frames.length) {
       const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+      const eduLabel   = educationLevel ? ` · ${EDU_LABELS[educationLevel]}` : "";
       document.getElementById("completeSubText").textContent =
-        `"${subject}" — ${frames.length} frames mastered · ${levelLabel} level.`;
+        `"${subject}" — ${frames.length} frames mastered · ${levelLabel}${eduLabel}.`;
       showScreen("completeScreen");
     } else {
       frameIdx++;
-      pageType  = "lesson";
-      selected  = null;
+      pageType = "lesson";
+      selected = null;
       renderCard();
     }
   }
@@ -944,17 +1025,25 @@ function handleAction() {
 async function startCourse(subj) {
   subject = subj.trim();
   const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+  const eduLabel   = educationLevel ? ` · ${EDU_LABELS[educationLevel]}` : "";
   document.getElementById("loadingText").textContent =
-    `Composing your ${lessonCount}-frame ${levelLabel} course on "${subject}"…`;
+    `Composing your ${lessonCount}-frame ${levelLabel}${eduLabel} course on "${subject}"…`;
   showScreen("loadingScreen");
 
   try {
-    frames   = await generateCourse(subject, lessonCount, learningLevel);
+    frames   = await generateCourse(subject, lessonCount, learningLevel, educationLevel);
     frameIdx = 0;
     pageType = "lesson";
     selected = null;
 
     // populate session badges
+    const sessionEdu = document.getElementById("sessionEdu");
+    if (educationLevel) {
+      sessionEdu.textContent = EDU_LABELS[educationLevel];
+      sessionEdu.style.display = "";
+    } else {
+      sessionEdu.style.display = "none";
+    }
     document.getElementById("sessionLevel").textContent  = levelLabel;
     document.getElementById("sessionFrames").textContent = `${frames.length} frames`;
 
@@ -969,8 +1058,9 @@ async function startCourse(subj) {
 // ── Settings Summary updater ──────────────────────────────────────────────────
 function updateSettingsSummary() {
   const levelLabel = learningLevel.charAt(0).toUpperCase() + learningLevel.slice(1);
+  const eduPart    = educationLevel ? ` · ${EDU_LABELS[educationLevel]}` : "";
   document.getElementById("settingsSummary").textContent =
-    `${lessonCount}-frame · ${levelLabel} course`;
+    `${lessonCount}-frame · ${levelLabel}${eduPart} course`;
 }
 
 // ── KEY SCREEN ────────────────────────────────────────────────────────────────
@@ -990,7 +1080,6 @@ function submitKey() {
   const val = keyInput.value.trim();
   if (!val) return;
   accessCode = val.toUpperCase();
-  // Save to localStorage so returning users skip this screen
   localStorage.setItem("l33_access_code", accessCode);
   showScreen("introScreen");
   document.getElementById("subjectInput").focus();
@@ -1008,9 +1097,7 @@ subjectInput.addEventListener("input", () => {
 });
 
 subjectInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && subjectInput.value.trim()) {
-    startCourse(subjectInput.value);
-  }
+  if (e.key === "Enter" && subjectInput.value.trim()) startCourse(subjectInput.value);
 });
 
 startBtn.addEventListener("click", () => {
@@ -1020,12 +1107,21 @@ startBtn.addEventListener("click", () => {
 // Slider
 frameSlider.addEventListener("input", () => {
   lessonCount = parseInt(frameSlider.value, 10);
-  document.getElementById("frameCountDisplay").innerHTML =
-    `${lessonCount} <span>frames</span>`;
+  document.getElementById("frameCountDisplay").innerHTML = `${lessonCount} <span>frames</span>`;
   updateSettingsSummary();
 });
 
-// Level pills
+// Educational level pills
+document.querySelectorAll(".edu-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll(".edu-pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    educationLevel = pill.dataset.edu;
+    updateSettingsSummary();
+  });
+});
+
+// Difficulty level pills
 document.querySelectorAll(".level-pill").forEach(pill => {
   pill.addEventListener("click", () => {
     document.querySelectorAll(".level-pill").forEach(p => p.classList.remove("active"));
@@ -1037,8 +1133,8 @@ document.querySelectorAll(".level-pill").forEach(pill => {
 
 // ── COMPLETE SCREEN ───────────────────────────────────────────────────────────
 document.getElementById("newSubjectBtn").addEventListener("click", () => {
-  subjectInput.value = "";
-  startBtn.disabled  = true;
+  subjectInput.value     = "";
+  startBtn.disabled      = true;
   introError.textContent = "";
   showScreen("introScreen");
   subjectInput.focus();
