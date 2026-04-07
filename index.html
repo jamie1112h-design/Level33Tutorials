@@ -212,7 +212,7 @@
   <button class="btn-primary" id="keySubmitBtn" disabled data-i18n="openGateBtn">Open the Gate &nbsp;→</button>
   <p style="margin-top:1.6rem;font-size:0.82rem;font-weight:300;font-style:italic;color:#8a7050;">
     <span data-i18n="noCode">Don't have an access code?</span>
-    <a href="https://buy.stripe.com/test_6oUaEZgp78Lx7mm3OpdQQ00" target="_blank" style="color:var(--gold-dark);text-decoration:none;border-bottom:1px solid rgba(155,120,65,0.4);">
+    <a href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" target="_blank" style="color:var(--gold-dark);text-decoration:none;border-bottom:1px solid rgba(155,120,65,0.4);">
       &nbsp;<span data-i18n="subscribeLink">Subscribe here &nbsp;→</span>
     </a>
   </p>
@@ -646,7 +646,7 @@ async function startCourse(subj) {
     const msg = e.message || "";
     const introError = document.getElementById("introError");
     if (msg.toLowerCase().includes("invalid access code")) {
-      introError.innerHTML = `<a class="error-link" href="https://buy.stripe.com/test_6oUaEZgp78Lx7mm3OpdQQ00" target="_blank" rel="noopener">${S("errorInvalidCode")}</a>`;
+      introError.innerHTML = `<a class="error-link" href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" target="_blank" rel="noopener">${S("errorInvalidCode")}</a>`;
     } else {
       introError.textContent = S("errorGeneric");
     }
