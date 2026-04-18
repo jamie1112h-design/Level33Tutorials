@@ -132,13 +132,55 @@ function parseJSON(text){
 }
 
 (function checkSavedCode(){
-  const saved=localStorage.getItem("l33_access_code");
-  if(saved&&saved.trim().length>0){
-    accessCode=saved.trim().toUpperCase();
+  const saved     = localStorage.getItem("l33_access_code");
+  const savedAt   = localStorage.getItem("l33_validated_at");
+  if (!saved || !saved.trim()) return;
+
+  const code      = saved.trim().toUpperCase();
+  const age       = savedAt ? (Date.now() - parseInt(savedAt, 10)) : Infinity;
+  const oneDay    = 24 * 60 * 60 * 1000;
+
+  if (age < oneDay) {
+    // Cache still fresh — skip Supabase, go straight through
+    accessCode = code;
     showScreen("introScreen");
-    const el=document.getElementById("subjectInput");
-    if(el)el.focus();
+    const el = document.getElementById("subjectInput");
+    if (el) el.focus();
+    return;
   }
+
+  // Cache stale — re-validate against Supabase
+  fetch("/.netlify/functions/validate", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ accessCode: code })
+  })
+  .then(res => res.json().then(data => ({ status: res.status, data })))
+  .then(({ status, data }) => {
+    if (status === 200 && data.valid) {
+      accessCode = code;
+      localStorage.setItem("l33_validated_at", Date.now().toString());
+      showScreen("introScreen");
+      const el = document.getElementById("subjectInput");
+      if (el) el.focus();
+    } else {
+      // Subscription lapsed or code invalid — clear and show gate with message
+      localStorage.removeItem("l33_access_code");
+      localStorage.removeItem("l33_validated_at");
+      const msg = status === 403
+        ? "Your subscription is no longer active. Please renew to continue."
+        : "Your access code could not be verified. Please enter it again.";
+      const keyError = document.getElementById("keyError");
+      if (keyError) keyError.textContent = msg;
+    }
+  })
+  .catch(() => {
+    // Network error — let them through on benefit of the doubt, generate.js will catch it
+    accessCode = code;
+    showScreen("introScreen");
+    const el = document.getElementById("subjectInput");
+    if (el) el.focus();
+  });
 })();
 
 function buildFrameGuide(n){
@@ -254,6 +296,7 @@ function updateSettingsSummary(){
 function signOut(){
   accessCode="";
   localStorage.removeItem("l33_access_code");
+  localStorage.removeItem("l33_validated_at");
   keyInput.value="";
   keySubmitBtn.disabled=true;
   keyError.textContent="";
@@ -275,7 +318,8 @@ function submitKey(){
   const val=keyInput.value.trim();
   if(!val)return;
   accessCode=val.toUpperCase();
-  localStorage.setItem("l33_access_code",accessCode);
+  localStorage.setItem("l33_access_code", accessCode);
+  localStorage.setItem("l33_validated_at", Date.now().toString());
   showScreen("introScreen");
   document.getElementById("subjectInput").focus();
 }
