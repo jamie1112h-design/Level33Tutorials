@@ -102,6 +102,19 @@ const STRINGS = {
   }
 };
 
+// ── COOKIE HELPERS ─────────────────────────────────────────────────────────
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/; SameSite=Lax";
+}
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+}
+
 let accessCode="", frames=[], frameIdx=0, pageType="lesson", selected=null;
 let subject="", lessonCount=10, learningLevel="intermediate", educationLevel="", currentLang="en";
 const LETTERS=["A","B","C","D"];
@@ -132,8 +145,8 @@ function parseJSON(text){
 }
 
 (function checkSavedCode(){
-  const saved     = localStorage.getItem("l33_access_code");
-  const savedAt   = localStorage.getItem("l33_validated_at");
+  const saved     = getCookie("l33_access_code");
+  const savedAt   = getCookie("l33_validated_at");
   if (!saved || !saved.trim()) return;
 
   const code      = saved.trim().toUpperCase();
@@ -159,14 +172,14 @@ function parseJSON(text){
   .then(({ status, data }) => {
     if (status === 200 && data.valid) {
       accessCode = code;
-      localStorage.setItem("l33_validated_at", Date.now().toString());
+      setCookie("l33_validated_at", Date.now().toString(), 30);
       showScreen("introScreen");
       const el = document.getElementById("subjectInput");
       if (el) el.focus();
     } else {
       // Subscription lapsed or code invalid — clear and show gate with message
-      localStorage.removeItem("l33_access_code");
-      localStorage.removeItem("l33_validated_at");
+      deleteCookie("l33_access_code");
+      deleteCookie("l33_validated_at");
       const msg = status === 403
         ? "Your subscription is no longer active. Please renew to continue."
         : "Your access code could not be verified. Please enter it again.";
@@ -295,8 +308,8 @@ function updateSettingsSummary(){
 
 function signOut(){
   accessCode="";
-  localStorage.removeItem("l33_access_code");
-  localStorage.removeItem("l33_validated_at");
+  deleteCookie("l33_access_code");
+  deleteCookie("l33_validated_at");
   keyInput.value="";
   keySubmitBtn.disabled=true;
   keyError.textContent="";
@@ -318,8 +331,8 @@ function submitKey(){
   const val=keyInput.value.trim();
   if(!val)return;
   accessCode=val.toUpperCase();
-  localStorage.setItem("l33_access_code", accessCode);
-  localStorage.setItem("l33_validated_at", Date.now().toString());
+  setCookie("l33_access_code", accessCode, 30);
+  setCookie("l33_validated_at", Date.now().toString(), 30);
   showScreen("introScreen");
   document.getElementById("subjectInput").focus();
 }
