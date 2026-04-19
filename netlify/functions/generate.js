@@ -1,5 +1,6 @@
 // Level 33 Tutorials — generate.js
-// Validates subscriber access code against Supabase, then proxies to Anthropic API
+// Validates subscriber access code against Supabase, logs the session,
+// then proxies the course generation request to Anthropic API.
 //
 // Required environment variables (set in Netlify dashboard):
 //   ANTHROPIC_API_KEY       — your Anthropic key (sk-ant-...)
@@ -37,7 +38,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const { accessCode, model, max_tokens, messages } = payload;
+  const { accessCode, model, max_tokens, messages, subject, frameCount, eduLevel, learnLevel, language } = payload;
 
   // ── Validate access code against Supabase ────────────────────────────────────
   const supabaseUrl  = process.env.SUPABASE_URL;
@@ -52,9 +53,11 @@ exports.handler = async (event) => {
     };
   }
 
+  let subscriberId = null;
+
   try {
     const supaRes = await fetch(
-      `${supabaseUrl}/rest/v1/subscribers?access_code=eq.${encodeURIComponent(codeClean)}&select=status`,
+      `${supabaseUrl}/rest/v1/subscribers?access_code=eq.${encodeURIComponent(codeClean)}&select=id,status`,
       {
         headers: {
           "apikey":        supabaseKey,
@@ -85,6 +88,8 @@ exports.handler = async (event) => {
       };
     }
 
+    subscriberId = rows[0].id;
+
   } catch (err) {
     console.error("Supabase validation error:", err);
     return {
@@ -92,6 +97,41 @@ exports.handler = async (event) => {
       headers: corsJson(),
       body: JSON.stringify({ error: { message: "Could not verify access. Please try again." } })
     };
+  }
+
+  // ── Log session to Supabase ──────────────────────────────────────────────────
+  let sessionId = null;
+
+  try {
+    const sessionRes = await fetch(
+      `${supabaseUrl}/rest/v1/sessions`,
+      {
+        method: "POST",
+        headers: {
+          "apikey":        supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Content-Type":  "application/json",
+          "Prefer":        "return=representation"
+        },
+        body: JSON.stringify({
+          subscriber_id: subscriberId,
+          subject:       subject    || "",
+          frame_count:   frameCount || 10,
+          edu_level:     eduLevel   || "",
+          learn_level:   learnLevel || "intermediate",
+          language:      language   || "en",
+          completed:     false
+        })
+      }
+    );
+
+    const sessionRows = await sessionRes.json();
+    if (Array.isArray(sessionRows) && sessionRows.length > 0) {
+      sessionId = sessionRows[0].id;
+    }
+  } catch (err) {
+    // Non-fatal — log the error but continue with course generation
+    console.error("Session logging error:", err);
   }
 
   // ── Forward to Anthropic ─────────────────────────────────────────────────────
@@ -114,10 +154,11 @@ exports.handler = async (event) => {
 
     const data = await anthropicRes.json();
 
+    // ── Return course content plus sessionId for client-side completion tracking
     return {
       statusCode: anthropicRes.status,
       headers:    corsJson(),
-      body:       JSON.stringify(data)
+      body:       JSON.stringify({ ...data, sessionId })
     };
 
   } catch (err) {
