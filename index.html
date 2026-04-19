@@ -117,6 +117,7 @@ function deleteCookie(name) {
 
 let accessCode="", frames=[], frameIdx=0, pageType="lesson", selected=null;
 let subject="", lessonCount=10, learningLevel="intermediate", educationLevel="", currentLang="en";
+let currentSessionId=null;
 const LETTERS=["A","B","C","D"];
 
 function S(key){return STRINGS[currentLang][key]!==undefined?STRINGS[currentLang][key]:(STRINGS.en[key]||"");}
@@ -229,9 +230,10 @@ async function generateCourse(subj,count,level,edu,lang){
   const langNote=STRINGS[lang].langInstruction||"";
   const audienceNote=eduNote?`Educational level: ${getEduLabel(edu)}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`:`Difficulty calibration: ${levelNote}`;
   const prompt=`You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n${langNote?"\nLanguage instruction: "+langNote:""}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Keep all content calibrated to the specified educational level and difficulty throughout.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording or a new angle, not simply repeat it.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences. Format:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
-  const res=await fetch("/.netlify/functions/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessCode,model:"claude-haiku-4-5-20251001",max_tokens:6000,messages:[{role:"user",content:prompt}]})});
+  const res=await fetch("/.netlify/functions/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessCode,model:"claude-haiku-4-5-20251001",max_tokens:6000,messages:[{role:"user",content:prompt}],subject:subj,frameCount:count,eduLevel:edu,learnLevel:level,language:lang})});
   if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`API error ${res.status}`);}
   const data=await res.json();
+  if(data.sessionId) currentSessionId=data.sessionId;
   return parseJSON((data.content||[]).map(b=>b.text||"").join(""));
 }
 
@@ -275,6 +277,14 @@ function handleAction(){
     if(frameIdx+1>=frames.length){
       document.getElementById("completeSubText").textContent=S("completeSubText")(subject,frames.length,getLevelLabel(learningLevel),getEduLabel(educationLevel));
       showScreen("completeScreen");
+      if(currentSessionId){
+        fetch("/.netlify/functions/complete-session",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({sessionId:currentSessionId})
+        }).catch(()=>{});
+        currentSessionId=null;
+      }
     }else{frameIdx++;pageType="lesson";selected=null;renderCard();}
   }
 }
