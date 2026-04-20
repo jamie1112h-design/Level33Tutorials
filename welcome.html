@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Welcome — Level 33 Mastermind</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment:  #f5f0e8;
+    --parchment2: #ede7d9;
+    --ink:        #2a1f0e;
+    --gold:       #b8965a;
+    --gold-dark:  #9a7a45;
+    --green:      #5a8a4a;
+  }
+
+  html, body {
+    height: 100%;
+    background: linear-gradient(160deg, var(--parchment) 0%, var(--parchment2) 100%);
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+  }
+
+  .logo-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 0.4rem;
+  }
+
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: 0.12em;
+    margin-bottom: 2.5rem;
+  }
+
+  .divider {
+    width: 50px;
+    height: 1px;
+    background: var(--gold);
+    margin: 0 auto 2rem;
+  }
+
+  /* ── WAITING STATE ── */
+  #waitingState { display: block; }
+
+  .spinner {
+    width: 38px;
+    height: 38px;
+    border: 2px solid rgba(155,120,65,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto 1.4rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .waiting-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+
+  .waiting-sub {
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #6b5535;
+  }
+
+  /* ── SUCCESS STATE ── */
+  #successState { display: none; }
+
+  .success-card {
+    background: rgba(255,255,255,0.62);
+    border: 1px solid rgba(155,120,65,0.18);
+    border-radius: 4px;
+    padding: 2.8rem 3rem;
+    box-shadow: 0 8px 40px rgba(60,40,10,0.08);
+  }
+
+  .success-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .success-sub {
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #6b5535;
+    margin-bottom: 2rem;
+  }
+
+  .code-block {
+    background: var(--parchment);
+    border: 1px solid rgba(155,120,65,0.35);
+    border-radius: 4px;
+    padding: 1.4rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .code-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .code-value {
+    font-family: monospace;
+    font-size: 1.9rem;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    margin-bottom: 0.8rem;
+  }
+
+  .copy-btn {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.78rem;
+    color: var(--gold-dark);
+    background: transparent;
+    border: 1px solid rgba(155,120,65,0.35);
+    border-radius: 2px;
+    padding: 0.3rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { background: rgba(155,120,65,0.08); }
+
+  .enter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 2.4rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: #3d2b0e;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-bottom: 1.2rem;
+  }
+
+  .enter-btn:hover {
+    background: #5a3f18;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(60,40,10,0.2);
+  }
+
+  .email-note {
+    font-size: 0.85rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #8a7050;
+    line-height: 1.6;
+  }
+
+  /* ── FALLBACK STATE ── */
+  #fallbackState { display: none; }
+
+  .fallback-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.8rem;
+  }
+
+  .fallback-sub {
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: #6b5535;
+    margin-bottom: 1.4rem;
+  }
+
+  .back-link {
+    font-size: 0.85rem;
+    color: var(--gold-dark);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(155,120,65,0.4);
+  }
+
+  @media (max-width: 560px) {
+    .success-card { padding: 1.8rem 1.4rem; }
+    .code-value { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-mark">Level 33 Mastermind</div>
+  <div class="brand">Programmed Learning Machine</div>
+  <div class="divider"></div>
+
+  <!-- WAITING -->
+  <div id="waitingState">
+    <div class="spinner"></div>
+    <h1 class="waiting-title">Setting up your access&hellip;</h1>
+    <p class="waiting-sub">This takes just a moment.</p>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="successState">
+    <div class="success-card">
+      <h1 class="success-title">You&rsquo;re in.</h1>
+      <p class="success-sub">Your subscription is confirmed. Here is your access code.</p>
+
+      <div class="code-block">
+        <div class="code-label">Your Access Code</div>
+        <div class="code-value" id="codeDisplay">&mdash;</div>
+        <button class="copy-btn" id="copyBtn">Copy code</button>
+      </div>
+
+      <a href="/" class="enter-btn" id="enterBtn">Enter the gate &nbsp;&rarr;</a>
+
+      <p class="email-note">A copy of your code has been sent to <strong id="emailDisplay"></strong>. Keep it safe &mdash; you&rsquo;ll need it on new devices.</p>
+    </div>
+  </div>
+
+  <!-- FALLBACK -->
+  <div id="fallbackState">
+    <h1 class="fallback-title">Check your inbox.</h1>
+    <p class="fallback-sub">Your payment was successful. Your access code is on its way to your email address. Return to the site and enter it at the gate when it arrives.</p>
+    <a href="/" class="back-link">Return to level33tutorials.com &rarr;</a>
+  </div>
+</div>
+
+<script>
+  const MAX_ATTEMPTS = 10;
+  const INTERVAL_MS  = 1500;
+
+  const params    = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+
+  if (!sessionId) {
+    showFallback();
+  } else {
+    pollForCode(0);
+  }
+
+  function pollForCode(attempt) {
+    if (attempt >= MAX_ATTEMPTS) {
+      showFallback();
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        const res  = await fetch(`/.netlify/functions/get-code?session_id=${encodeURIComponent(sessionId)}`);
+        const data = await res.json();
+
+        if (res.status === 200 && data.ready && data.access_code) {
+          showSuccess(data.access_code, data.email);
+        } else {
+          pollForCode(attempt + 1);
+        }
+      } catch (e) {
+        pollForCode(attempt + 1);
+      }
+    }, INTERVAL_MS);
+  }
+
+  function showSuccess(code, email) {
+    document.getElementById("waitingState").style.display  = "none";
+    document.getElementById("successState").style.display  = "block";
+    document.getElementById("fallbackState").style.display = "none";
+
+    document.getElementById("codeDisplay").textContent   = code;
+    document.getElementById("emailDisplay").textContent  = email || "your email address";
+
+    // Pre-fill the gate input and set cookies when Enter the gate is clicked
+    document.getElementById("enterBtn").addEventListener("click", e => {
+      e.preventDefault();
+      setCookie("l33_access_code",    code,                    30);
+      setCookie("l33_validated_at",   Date.now().toString(),   30);
+      window.location.href = "/";
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      navigator.clipboard.writeText(code).then(() => {
+        document.getElementById("copyBtn").textContent = "Copied!";
+        setTimeout(() => {
+          document.getElementById("copyBtn").textContent = "Copy code";
+        }, 2000);
+      });
+    });
+  }
+
+  function showFallback() {
+    document.getElementById("waitingState").style.display  = "none";
+    document.getElementById("successState").style.display  = "none";
+    document.getElementById("fallbackState").style.display = "block";
+  }
+
+  // ── Cookie helpers (mirrors index.html) ──────────────────────────────────────
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/; SameSite=Lax";
+  }
+</script>
+</body>
+</html>
