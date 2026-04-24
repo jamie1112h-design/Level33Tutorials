@@ -1,8 +1,9 @@
 {
   "name": "l33-tutorials",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Level 33 Mastermind — Programmed Learning Machine",
   "dependencies": {
+    "@netlify/functions": "^2.0.0",
     "@supabase/supabase-js": "^2.101.1",
     "stripe": "^14.21.0"
   }
