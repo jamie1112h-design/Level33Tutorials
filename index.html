@@ -157,7 +157,6 @@ function parseJSON(text){
   const oneDay    = 24 * 60 * 60 * 1000;
 
   if (age < oneDay) {
-    // Cache still fresh — skip Supabase, go straight through
     accessCode = code;
     showScreen("introScreen");
     const el = document.getElementById("subjectInput");
@@ -165,7 +164,6 @@ function parseJSON(text){
     return;
   }
 
-  // Cache stale — re-validate against Supabase
   fetch("/.netlify/functions/validate", {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
@@ -180,7 +178,6 @@ function parseJSON(text){
       const el = document.getElementById("subjectInput");
       if (el) el.focus();
     } else {
-      // Subscription lapsed or code invalid — clear and show gate with message
       deleteCookie("l33_access_code");
       deleteCookie("l33_validated_at");
       const msg = status === 403
@@ -191,7 +188,6 @@ function parseJSON(text){
     }
   })
   .catch(() => {
-    // Network error — let them through on benefit of the doubt, generate.js will catch it
     accessCode = code;
     showScreen("introScreen");
     const el = document.getElementById("subjectInput");
@@ -225,19 +221,105 @@ function eduInstructions(edu){
   return"";
 }
 
-async function generateCourse(subj,count,level,edu,lang){
-  const frameGuide=buildFrameGuide(count);
-  const levelNote=levelInstructions(level);
-  const eduNote=edu?eduInstructions(edu):"";
-  const langNote=STRINGS[lang].langInstruction||"";
-  const audienceNote=eduNote?`Educational level: ${getEduLabel(edu)}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`:`Difficulty calibration: ${levelNote}`;
-  const prompt=`You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n${langNote?"\nLanguage instruction: "+langNote:""}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Keep all content calibrated to the specified educational level and difficulty throughout.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording or a new angle, not simply repeat it.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences. Format:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
-  const res=await fetch("/.netlify/functions/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessCode,model:"claude-haiku-4-5-20251001",max_tokens:6000,messages:[{role:"user",content:prompt}],subject:subj,frameCount:count,eduLevel:edu,learnLevel:level,language:lang})});
-  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`API error ${res.status}`);}
-  const data=await res.json();
-  if(data.sessionId) currentSessionId=data.sessionId;
-  return parseJSON((data.content||[]).map(b=>b.text||"").join(""));
+// ── COURSE GENERATION — Fix 06: SSE Streaming ────────────────────────────────
+// Replaces the previous single-shot fetch/json() pattern.
+// The backend (generate.js) now returns a text/event-stream. This function
+// reads the stream chunk-by-chunk, accumulates text deltas from Anthropic's
+// SSE events, captures the sessionId from the leading session_start event,
+// and passes the fully assembled text to parseJSON() — same as before.
+async function generateCourse(subj, count, level, edu, lang) {
+  const frameGuide   = buildFrameGuide(count);
+  const levelNote    = levelInstructions(level);
+  const eduNote      = edu ? eduInstructions(edu) : "";
+  const langNote     = STRINGS[lang].langInstruction || "";
+  const audienceNote = eduNote
+    ? `Educational level: ${getEduLabel(edu)}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`
+    : `Difficulty calibration: ${levelNote}`;
+  const prompt = `You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n${langNote ? "\nLanguage instruction: " + langNote : ""}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Keep all content calibrated to the specified educational level and difficulty throughout.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording or a new angle, not simply repeat it.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences. Format:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
+
+  const res = await fetch("/.netlify/functions/generate", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({
+      accessCode,
+      model:      "claude-haiku-4-5-20251001",
+      max_tokens: 6000,
+      messages:   [{ role: "user", content: prompt }],
+      subject:    subj,
+      frameCount: count,
+      eduLevel:   edu,
+      learnLevel: level,
+      language:   lang
+    })
+  });
+
+  // Auth / subscription errors arrive as plain JSON (non-200)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${res.status}`);
+  }
+
+  // ── Fallback: plain JSON (should not occur with the new generate.js) ──────
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("text/event-stream")) {
+    const data = await res.json();
+    if (data.sessionId) currentSessionId = data.sessionId;
+    return parseJSON((data.content || []).map(b => b.text || "").join(""));
+  }
+
+  // ── SSE streaming path ───────────────────────────────────────────────────
+  const reader  = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer   = "";
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // Split on newlines; keep any trailing incomplete line in the buffer
+    const lines = buffer.split("\n");
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6).trim();
+      if (!raw || raw === "[DONE]") continue;
+
+      let evt;
+      try { evt = JSON.parse(raw); } catch { continue; }
+
+      // Our injected session metadata event
+      if (evt.type === "session_start") {
+        if (evt.sessionId) currentSessionId = evt.sessionId;
+        continue;
+      }
+
+      // Anthropic text delta — accumulate into fullText
+      if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+        fullText += evt.delta.text;
+      }
+    }
+  }
+
+  // Process any remaining buffered line after stream closes
+  if (buffer.startsWith("data: ")) {
+    const raw = buffer.slice(6).trim();
+    if (raw && raw !== "[DONE]") {
+      try {
+        const evt = JSON.parse(raw);
+        if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+          fullText += evt.delta.text;
+        }
+      } catch {}
+    }
+  }
+
+  return parseJSON(fullText);
 }
+// ── End Fix 06 ────────────────────────────────────────────────────────────────
 
 function updateProgress(){
   const total=frames.length*3;
@@ -360,9 +442,8 @@ document.getElementById("recoverySendBtn").addEventListener("click", async () =>
     });
   } catch(e) {}
 
-  // Always show success message — never reveal whether email was found
   btn.disabled = false;
-  btn.textContent = "Send my code  →";
+  btn.textContent = "Send my code  →";
   sucEl.style.display = "block";
   document.getElementById("recoveryEmail").value = "";
 });
