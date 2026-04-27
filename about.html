@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A Founder's Note — PrecisionStep Tutorials</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --parchment:   #f5f0e8;
+  --parchment2:  #ede7d9;
+  --ink:         #2a1f0e;
+  --gold:        #b8965a;
+  --gold-dark:   #9a7a45;
+  --gold-deeper: #7a6030;
+  --cream-card:  rgba(255,255,255,0.68);
+}
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--parchment) 0%, var(--parchment2) 100%);
+  font-family: 'Crimson Pro', Georgia, serif;
+  color: var(--ink);
+  padding: 4rem 2rem 5rem;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 15% 40%, rgba(180,140,80,0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(120,80,40,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(155,120,65,0.05) 0%, transparent 60%);
+}
+
+/* ── LAYOUT ── */
+.page-wrap {
+  position: relative; z-index: 1;
+  max-width: 720px; margin: 0 auto;
+  animation: fadeUp 0.7s ease both;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── HEADER ── */
+.site-header {
+  text-align: center; margin-bottom: 3.5rem;
+}
+.logo-mark {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.62rem; letter-spacing: 0.55em; text-transform: uppercase;
+  color: var(--gold-dark); margin-bottom: 0.4rem;
+}
+.brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-weight: 400; letter-spacing: 0.14em;
+  color: var(--ink); margin-bottom: 2rem;
+}
+.header-rule {
+  display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+}
+.header-rule::before, .header-rule::after {
+  content: ''; flex: 1; height: 1px; background: rgba(155,120,65,0.3);
+}
+.header-rule span {
+  font-size: 0.6rem; letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--gold); font-family: 'Playfair Display', serif; white-space: nowrap;
+}
+
+/* ── CARD ── */
+.note-card {
+  background: var(--cream-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(155,120,65,0.2);
+  border-radius: 4px;
+  padding: 4rem 4.5rem;
+  box-shadow:
+    0 12px 60px rgba(60,40,10,0.09),
+    0 1px 0 rgba(255,255,255,0.9) inset;
+}
+
+/* ── TYPOGRAPHY ── */
+.note-label {
+  font-size: 0.62rem; letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--gold); font-family: 'Playfair Display', serif;
+  margin-bottom: 1.8rem; display: block;
+}
+.note-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.55rem; font-weight: 400;
+  color: var(--ink); line-height: 1.22;
+  margin-bottom: 0.5rem;
+}
+.note-name {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem; font-weight: 300;
+  color: var(--gold-dark); letter-spacing: 0.08em;
+  margin-bottom: 2.8rem;
+}
+.note-title-wrap {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 2.8rem;
+}
+.note-title-wrap h1 {
+  margin-bottom: 0.6rem;
+}
+.divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--gold);
+}
+.note-body p {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 1.18rem;
+  font-weight: 300;
+  font-style: normal;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 1.6rem;
+}
+.note-body p:last-of-type { margin-bottom: 0; }
+
+/* Signature */
+.signature {
+  margin-top: 2.4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(155,120,65,0.2);
+}
+.signature-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.08rem; font-weight: 600;
+  color: var(--ink); margin-bottom: 0.25rem;
+}
+.signature-title {
+  font-size: 0.95rem; font-weight: 300;
+  color: var(--gold-dark);
+}
+
+/* ── FOOTER NAV ── */
+.page-nav {
+  margin-top: 3rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.btn-return {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 2.2rem;
+  font-family: 'Playfair Display', serif; font-size: 0.78rem;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--parchment); background: #3d2b0e;
+  border: none; border-radius: 2px; text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-return:hover { background: #5a3f18; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(60,40,10,0.2); }
+.footer-links {
+  font-size: 1rem; font-weight: 300; font-style: italic;
+  color: rgba(107,85,53,0.55);
+}
+.footer-links a {
+  color: var(--gold-dark); text-decoration: none;
+  border-bottom: 1px solid rgba(155,120,65,0.25);
+}
+.footer-links a:hover { opacity: 0.8; }
+
+@media (max-width: 640px) {
+  body { padding: 2.5rem 1.2rem 4rem; }
+  .note-card { padding: 2.2rem 1.6rem; }
+  .note-title { font-size: 1.2rem; }
+  .note-body p { font-size: 1.08rem; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="site-header">
+    <div class="logo-mark">Level 33 Mastermind</div>
+    <div class="brand-title">PrecisionStep Tutorials</div>
+    <div class="header-rule"><span>About Us</span></div>
+  </header>
+
+  <article class="note-card">
+    <div class="note-title-wrap">
+      <h1 class="note-title">Founder&rsquo;s Note</h1>
+      <span class="divider"></span>
+    </div>
+
+    <div class="note-body">
+
+      <p>I carry a Kanien&rsquo;keh&aacute;:ka (Mohawk) name &ndash; Wadontei:io &ndash; which can be translated as A Good Gate. In Haudenosaunee (Iroquois) tradition, a gate may not be a barrier. It may be a threshold &ndash; a place of passage, of invitation, of movement from one understanding to the next. That idea has followed me through a long career in media, economics, and education, and it is the idea at the heart of this site.</p>
+
+      <p>PrecisionStep Tutorials was born from a simple but persistent frustration: most learning is designed to inform, not to transform. Lectures, textbooks, and videos deliver content &ndash; but delivering content is not the same as producing understanding. Real understanding is built step by step, each new idea grounded in the one before it.</p>
+
+      <p>That insight belongs, in its scientific form, to B.F. Skinner. Working at Harvard in the mid-twentieth century as a psychology professor, Skinner developed programmed learning &ndash; a method that breaks any subject into precisely sequenced micro-steps, each one small enough to succeed, each one building naturally toward the next. His research showed that when the sequence is right and the pacing is right, almost any learner can master almost any subject. The method was remarkable. And then, somehow, it was largely forgotten.</p>
+
+      <p>PrecisionStep Tutorials is built to recover it. Any subject becomes learnable when broken into the right micro-steps, in the right order, at the right pace. Choose any topic. Your lesson builds itself around you.</p>
+
+      <p>I built this to first assist my grandchildren. Then for anyone &ndash; adult or young person &ndash; who has ever felt that a subject was beyond them, and suspected, quietly, that the problem might not be them at all.</p>
+
+      <p>It probably wasn&rsquo;t.</p>
+
+      <p>The Gate is open. Please step through.</p>
+
+    </div>
+
+    <div class="signature">
+      <div class="signature-name">&ndash; Jamie Hill &nbsp;(Wadontei:io)</div>
+      <div class="signature-title">Founder &nbsp;&middot;&nbsp; Ontario, Canada</div>
+    </div>
+  </article>
+
+  <nav class="page-nav">
+    <a href="/" class="btn-return">&#8592; &nbsp;Return to PrecisionStep</a>
+    <p class="footer-links">
+      <a href="/privacy.html">Privacy Policy</a>&nbsp;&middot;&nbsp;
+      <a href="/terms.html">Terms of Use</a>&nbsp;&middot;&nbsp;
+      <a href="mailto:ask@level33tutorials.com">ask@level33tutorials.com</a>
+    </p>
+  </nav>
+
+</div>
+</body>
+</html>
