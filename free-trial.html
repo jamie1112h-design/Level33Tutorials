@@ -427,10 +427,10 @@ function handleAction() {
   else {
     const isLast=frameIdx+1>=frames.length;
     if (isLast) {
-      // Lesson fully completed — count it
+      // Lesson fully completed — capture remaining BEFORE incrementing for display
+      const rem=getRemainingLessons() - 1;
       lessonsUsed++;
       saveTrialData();
-      const rem=getRemainingLessons();
       document.getElementById('completeSubText').textContent=`"${subject}" — ${frames.length} frames · ${getLevelLabel(learningLevel)}${getEduLabel(educationLevel)?' · '+getEduLabel(educationLevel):''}`;
       document.getElementById('completeTrialNote').textContent = rem > 0
         ? rem + ' free ' + lessonWord(rem) + ' remaining in your trial.'
