@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Try PrecisionStep Free — 10 Free Lessons</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --parchment:   #f5f0e8;
+  --parchment2:  #ede7d9;
+  --ink:         #2a1f0e;
+  --ink-light:   #3a2a10;
+  --gold:        #b8965a;
+  --gold-dark:   #9a7a45;
+  --gold-deeper: #7a6030;
+  --cream-card:  rgba(255,255,255,0.62);
+  --green:       #5a8a4a;
+  --red:         #a04040;
+}
+html, body { height: 100%; background: var(--parchment); font-family: 'Crimson Pro', Georgia, serif; color: var(--ink); }
+body {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--parchment) 0%, var(--parchment2) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(180,140,80,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(120,80,40,0.06) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+.screen { position: relative; z-index: 1; width: 100%; display: none; animation: fadeIn 0.4s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pageIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+
+.logo-mark   { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.5rem; }
+.brand-title { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:0.7rem; }
+.divider     { width:50px; height:1px; background:var(--gold); margin:0 auto 1.6rem; }
+
+label.field-label { display:block; font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.6rem; text-align:left; }
+input[type="text"], input[type="email"] { width:100%; padding:0.95rem 1.1rem; font-family:'Crimson Pro',serif; font-size:1rem; font-weight:300; color:var(--ink); background:rgba(255,255,255,0.72); border:1px solid rgba(155,120,65,0.3); border-radius:2px; outline:none; transition:all 0.2s; margin-bottom:1rem; }
+input:focus { border-color:var(--gold); background:rgba(255,255,255,0.92); box-shadow:0 0 0 3px rgba(184,150,90,0.12); }
+
+button { cursor:pointer; border:none; font-family:'Playfair Display',serif; border-radius:2px; transition:all 0.2s; }
+.btn-primary { display:inline-flex; align-items:center; gap:0.5rem; padding:0.9rem 2.4rem; font-size:0.82rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--parchment); background:#3d2b0e; }
+.btn-primary:hover:not(:disabled) { background:#5a3f18; transform:translateY(-1px); box-shadow:0 6px 24px rgba(60,40,10,0.2); }
+.btn-primary:disabled { opacity:0.38; cursor:not-allowed; }
+.btn-subscribe { display:inline-flex; align-items:center; gap:0.5rem; padding:1rem 2.8rem; font-family:'Playfair Display',serif; font-size:0.85rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--parchment); background:#3d2b0e; border:none; border-radius:2px; text-decoration:none; cursor:pointer; transition:all 0.2s; }
+.btn-subscribe:hover { background:#5a3f18; transform:translateY(-1px); box-shadow:0 6px 24px rgba(60,40,10,0.22); }
+
+.error-msg { color:#8b2020; font-size:1rem; font-style:italic; font-weight:400; margin-bottom:0.8rem; min-height:1.2rem; }
+.page-footer { margin-top:1.4rem; font-size:1rem; font-weight:300; font-style:italic; color:rgba(107,85,53,0.55); text-align:center; }
+.page-footer a { color:var(--gold-dark); text-decoration:none; border-bottom:1px solid rgba(155,120,65,0.25); }
+
+/* SCREEN 1 */
+#trialEntryScreen { flex-direction:column; align-items:center; justify-content:center; text-align:center; max-width:520px; margin:0 auto; }
+.entry-heading { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:400; color:var(--ink); line-height:1.3; margin-bottom:0.8rem; }
+.entry-blurb { font-size:1.1rem; font-weight:300; font-style:italic; color:#6b5535; line-height:1.5; margin-bottom:1.6rem; max-width:420px; }
+.trial-badge { display:inline-block; margin-bottom:1.6rem; padding:0.5rem 1.4rem; font-family:'Crimson Pro',Georgia,serif; font-size:1.05rem; letter-spacing:0.06em; color:var(--gold-deeper); background:rgba(184,150,90,0.12); border:1px solid rgba(155,120,65,0.35); border-radius:20px; }
+.age-gate { display:flex; align-items:flex-start; gap:0.8rem; margin-bottom:1.4rem; text-align:left; padding:1rem 1.1rem; background:rgba(255,255,255,0.5); border:1px solid rgba(155,120,65,0.2); border-radius:2px; }
+.age-gate input[type="checkbox"] { width:18px; height:18px; min-width:18px; margin:0; margin-top:2px; cursor:pointer; accent-color:var(--gold-dark); }
+.age-gate label { font-size:1rem; font-weight:300; font-style:italic; color:#6b5535; line-height:1.5; cursor:pointer; }
+
+/* SCREEN 2 */
+#trialIntroScreen { flex-direction:column; align-items:center; justify-content:center; text-align:center; max-width:600px; margin:0 auto; }
+.intro-logo  { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.4rem; }
+.intro-brand { font-family:'Playfair Display',serif; font-size:1rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:1.2rem; }
+.intro-title { font-family:'Playfair Display',serif; font-size:2.9rem; font-weight:400; color:var(--ink); line-height:1.18; margin-bottom:0.6rem; }
+.intro-sub   { font-size:1.15rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:0.6rem; }
+.lessons-remaining { font-size:1rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:1.6rem; }
+.course-options { width:100%; max-width:480px; margin:0 auto 1.6rem; display:flex; flex-direction:column; gap:1.4rem; }
+.option-group { text-align:left; }
+.option-group-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.7rem; }
+.option-value { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:600; color:var(--ink); }
+.option-value span { font-size:0.72rem; font-weight:400; font-family:'Crimson Pro',serif; color:var(--gold-dark); letter-spacing:0.15em; text-transform:uppercase; margin-left:0.25rem; }
+input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:2px; background:rgba(155,120,65,0.25); border-radius:1px; outline:none; margin:0; cursor:pointer; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--gold-dark); border:2px solid var(--parchment); box-shadow:0 1px 6px rgba(60,40,10,0.22); cursor:pointer; transition:transform 0.15s; }
+input[type="range"]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:var(--gold-dark); border:2px solid var(--parchment); cursor:pointer; }
+input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
+.slider-ticks { display:flex; justify-content:space-between; margin-top:0.45rem; }
+.slider-ticks span { font-size:0.65rem; color:rgba(107,85,53,0.55); font-family:'Crimson Pro',serif; }
+.level-pills { display:flex; gap:0; border:1px solid rgba(155,120,65,0.3); border-radius:2px; overflow:hidden; }
+.level-pill { flex:1; padding:0.72rem 0.5rem; font-family:'Playfair Display',serif; font-size:0.74rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-dark); background:rgba(255,255,255,0.5); border:none; cursor:pointer; transition:all 0.18s; border-right:1px solid rgba(155,120,65,0.2); }
+.level-pill:last-child { border-right:none; }
+.level-pill:hover:not(.active) { background:rgba(184,150,90,0.1); }
+.level-pill.active { background:#3d2b0e; color:var(--parchment); font-weight:600; }
+.edu-pills { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid rgba(155,120,65,0.3); border-radius:2px; overflow:hidden; }
+.edu-pill { padding:0.72rem 0.5rem; font-family:'Playfair Display',serif; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold-dark); background:rgba(255,255,255,0.5); border:none; cursor:pointer; transition:all 0.18s; text-align:center; line-height:1.3; }
+.edu-pill:nth-child(1) { border-right:1px solid rgba(155,120,65,0.2); border-bottom:1px solid rgba(155,120,65,0.2); }
+.edu-pill:nth-child(2) { border-bottom:1px solid rgba(155,120,65,0.2); }
+.edu-pill:nth-child(3) { border-right:1px solid rgba(155,120,65,0.2); }
+.edu-pill:hover:not(.active) { background:rgba(184,150,90,0.1); }
+.edu-pill.active { background:#3d2b0e; color:var(--parchment); font-weight:600; }
+.settings-summary { font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:rgba(107,85,53,0.6); margin-bottom:1.4rem; font-family:'Crimson Pro',serif; font-style:italic; }
+
+/* SCREEN 3 */
+#loadingScreen { flex-direction:column; align-items:center; justify-content:center; gap:1.4rem; }
+.spinner { width:38px; height:38px; border:2px solid rgba(155,120,65,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.9s linear infinite; }
+.loading-text { font-size:0.95rem; font-weight:300; font-style:italic; color:#6b5535; }
+
+/* SCREEN 4 */
+#bookScreen { flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1rem; }
+.book-wrap { width:100%; max-width:700px; }
+.trial-counter-bar { text-align:center; margin-bottom:0.8rem; font-size:1rem; font-weight:300; font-style:italic; color:var(--gold-dark); }
+.session-badge { display:flex; justify-content:center; gap:1.2rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+.badge-pill { font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dark); background:rgba(184,150,90,0.1); border:1px solid rgba(155,120,65,0.22); border-radius:20px; padding:0.28rem 0.85rem; font-family:'Crimson Pro',serif; }
+.progress-bar { width:100%; height:2px; background:rgba(155,120,65,0.15); border-radius:1px; margin-bottom:2.2rem; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--gold-dark),#c8a86a); border-radius:1px; transition:width 0.5s ease; }
+.page-counter { font-size:0.68rem; letter-spacing:0.32em; text-transform:uppercase; color:var(--gold); text-align:center; margin-bottom:1.8rem; }
+.card { background:var(--cream-card); backdrop-filter:blur(8px); border:1px solid rgba(155,120,65,0.18); border-radius:4px; padding:2.8rem 3.2rem; box-shadow:0 8px 40px rgba(60,40,10,0.08),0 1px 0 rgba(255,255,255,0.8) inset; min-height:340px; display:flex; flex-direction:column; justify-content:space-between; animation:pageIn 0.32s ease; }
+.card.interstitial-card { border-color:rgba(155,120,65,0.35); background:rgba(255,252,244,0.85); text-align:center; align-items:center; }
+.interstitial-divider { width:40px; height:1px; background:var(--gold); margin:1.4rem auto; }
+.interstitial-text { font-size:1.22rem; font-weight:300; font-style:italic; line-height:1.82; color:var(--ink); max-width:480px; }
+.frame-type { font-size:0.64rem; letter-spacing:0.42em; text-transform:uppercase; color:var(--gold); margin-bottom:1.2rem; }
+.frame-type.review { color:var(--gold-deeper); }
+.lesson-text { font-size:1.22rem; font-weight:300; line-height:1.78; color:var(--ink); flex:1; margin-bottom:2rem; }
+.lesson-text strong { font-weight:600; color:#1a1008; }
+.question-text { font-family:'Playfair Display',serif; font-size:1.18rem; font-weight:400; color:var(--ink); line-height:1.55; margin-bottom:1.6rem; }
+.options { display:flex; flex-direction:column; gap:0.65rem; margin-bottom:1.6rem; }
+.option { display:flex; align-items:flex-start; gap:0.9rem; padding:0.82rem 1.1rem; border:1px solid rgba(155,120,65,0.2); border-radius:2px; cursor:pointer; background:rgba(255,255,255,0.4); font-family:'Crimson Pro',serif; font-size:1.05rem; font-weight:300; color:var(--ink-light); line-height:1.45; text-align:left; width:100%; transition:all 0.16s; }
+.option:hover { background:rgba(184,150,90,0.1); border-color:rgba(155,120,65,0.4); }
+.option.selected { border-color:var(--gold); background:rgba(184,150,90,0.12); }
+.option.correct  { border-color:var(--green); background:rgba(90,138,74,0.1); cursor:default; }
+.option.wrong    { border-color:var(--red); background:rgba(160,64,64,0.07); opacity:0.6; cursor:default; }
+.opt-letter { font-family:'Playfair Display',serif; font-size:0.84rem; font-weight:600; color:var(--gold-dark); min-width:18px; padding-top:1px; }
+.option.correct .opt-letter { color:var(--green); }
+.option.wrong   .opt-letter { color:var(--red); }
+.answer-box { border-left:3px solid var(--gold); padding:1rem 1.3rem; margin-bottom:1.6rem; background:rgba(184,150,90,0.06); border-radius:0 2px 2px 0; }
+.answer-label { font-size:0.63rem; letter-spacing:0.38em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.45rem; }
+.answer-text  { font-size:1.04rem; font-weight:300; font-style:italic; color:var(--ink); line-height:1.65; }
+.btn-row { display:flex; justify-content:flex-end; gap:0.8rem; margin-top:auto; }
+
+/* SCREEN 5 */
+#upsellScreen { flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.upsell-wrap { max-width:560px; width:100%; }
+.upsell-card { background:var(--cream-card); border:1px solid rgba(155,120,65,0.28); border-radius:4px; padding:3rem 3.2rem; box-shadow:0 8px 40px rgba(60,40,10,0.1); }
+.upsell-label { font-size:0.68rem; letter-spacing:0.42em; text-transform:uppercase; color:var(--gold); margin-bottom:1.4rem; }
+.upsell-title { font-family:'Playfair Display',serif; font-size:2rem; font-weight:400; color:var(--ink); line-height:1.25; margin-bottom:0.8rem; }
+.upsell-divider { width:40px; height:1px; background:var(--gold); margin:1.4rem auto; }
+.upsell-sub { font-size:1.1rem; font-weight:300; font-style:italic; color:#6b5535; line-height:1.6; margin-bottom:2rem; }
+.upsell-note { font-size:1rem; font-weight:300; font-style:italic; color:rgba(107,85,53,0.65); margin-top:1rem; }
+
+/* SCREEN 6 */
+#completeScreen { flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.complete-wrap { max-width:620px; width:100%; }
+.complete-card { background:var(--cream-card); border:1px solid rgba(155,120,65,0.18); border-radius:4px; padding:3rem 3.2rem; box-shadow:0 8px 40px rgba(60,40,10,0.08); }
+.complete-title { font-family:'Playfair Display',serif; font-size:2rem; font-weight:400; color:var(--ink); margin-bottom:0.6rem; }
+.complete-sub { font-size:1.08rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:0.4rem; }
+.complete-trial-note { font-size:1rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:2rem; }
+
+@media (max-width:600px) {
+  .card { padding:1.8rem 1.4rem; }
+  .intro-title { font-size:2rem; }
+  .upsell-card, .complete-card { padding:2rem 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: ENTRY -->
+<div id="trialEntryScreen" class="screen active">
+  <div class="logo-mark">Level 33 Mastermind</div>
+  <div class="brand-title">PrecisionStep Tutorials</div>
+  <h2 class="entry-heading">Try 10 Free Lessons</h2>
+  <p class="entry-blurb">PrecisionStep Tutorials delivers tutorials on any subject of your choice &mdash; one micro-step at a time. Built on B.F.&nbsp;Skinner&rsquo;s proven science of programmed learning, each session takes you from zero to confident understanding in minutes. B.F.&nbsp;Skinner was a Harvard University Professor of Psychology.</p>
+  <div class="trial-badge">10 Free Lessons &ndash; No Credit Card Needed</div>
+  <div class="divider"></div>
+  <label class="field-label" for="trialEmail">Your Email Address</label>
+  <input type="email" id="trialEmail" placeholder="you@example.com" autocomplete="email" />
+  <div class="age-gate">
+    <input type="checkbox" id="ageCheck" />
+    <label for="ageCheck">I confirm that I am 13 years of age or older, or that I am a parent or guardian accessing this on behalf of a minor.</label>
+  </div>
+  <div class="error-msg" id="entryError"></div>
+  <button class="btn-primary" id="beginTrialBtn" disabled>Begin Free Trial &nbsp;&rarr;</button>
+  <p class="page-footer" style="margin-top:1.6rem;">Already a subscriber? <a href="/">Sign in here &nbsp;&rarr;</a></p>
+  <p class="page-footer" style="margin-top:0.6rem;">
+    <a href="/privacy.html">Privacy Policy</a>&nbsp;&middot;&nbsp;<a href="/terms.html">Terms of Use</a>&nbsp;&middot;&nbsp;<a href="mailto:ask@level33tutorials.com">ask@level33tutorials.com</a>
+  </p>
+</div>
+
+<!-- SCREEN 2: SUBJECT + SETTINGS -->
+<div id="trialIntroScreen" class="screen">
+  <div class="intro-logo">Level 33 Mastermind</div>
+  <div class="intro-brand">PrecisionStep Tutorials</div>
+  <h1 class="intro-title">What would you<br/>like to learn today?</h1>
+  <p class="intro-sub">One idea at a time. One question at a time.</p>
+  <p class="lessons-remaining" id="lessonsRemainingText"></p>
+  <div class="divider"></div>
+  <label class="field-label" for="subjectInput" style="max-width:480px;width:100%;text-align:left;">Subject</label>
+  <input type="text" id="subjectInput" placeholder="e.g. Molarity, The French Revolution, Options Trading&hellip;" style="max-width:480px;margin:0 auto 1.6rem;" />
+  <div class="course-options">
+    <div class="option-group">
+      <div class="option-group-header">
+        <label class="field-label" style="margin-bottom:0;">Lesson Length</label>
+        <div class="option-value" id="frameCountDisplay">10 <span>frames</span></div>
+      </div>
+      <input type="range" id="frameSlider" min="5" max="20" step="1" value="10" />
+      <div class="slider-ticks"><span>5</span><span>8</span><span>10</span><span>13</span><span>16</span><span>20</span></div>
+    </div>
+    <div class="option-group">
+      <label class="field-label" style="margin-bottom:0.65rem;">Educational Level</label>
+      <div class="edu-pills">
+        <button class="edu-pill" data-edu="elementary">Elementary</button>
+        <button class="edu-pill" data-edu="middle_school">Middle School</button>
+        <button class="edu-pill" data-edu="high_school">High School</button>
+        <button class="edu-pill" data-edu="college">College +</button>
+      </div>
+    </div>
+    <div class="option-group">
+      <label class="field-label" style="margin-bottom:0.65rem;">Learning Level</label>
+      <div class="level-pills">
+        <button class="level-pill" data-level="beginner">Beginner</button>
+        <button class="level-pill active" data-level="intermediate">Intermediate</button>
+        <button class="level-pill" data-level="advanced">Advanced</button>
+      </div>
+    </div>
+  </div>
+  <p class="settings-summary" id="settingsSummary">10-frame &middot; Intermediate lesson</p>
+  <div class="error-msg" id="introError"></div>
+  <button class="btn-primary" id="startBtn" disabled>Open the Book &nbsp;&rarr;</button>
+</div>
+
+<!-- SCREEN 3: LOADING -->
+<div id="loadingScreen" class="screen">
+  <div class="spinner"></div>
+  <p class="loading-text" id="loadingText">Composing your lesson&hellip;</p>
+</div>
+
+<!-- SCREEN 4: LESSON CARDS -->
+<div id="bookScreen" class="screen">
+  <div class="book-wrap">
+    <div class="trial-counter-bar" id="trialCounterBar"></div>
+    <div class="session-badge">
+      <div class="badge-pill" id="sessionEdu"></div>
+      <div class="badge-pill" id="sessionLevel"></div>
+      <div class="badge-pill" id="sessionFrames"></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="page-counter" id="pageCounter"></div>
+    <div class="card" id="card"></div>
+  </div>
+</div>
+
+<!-- SCREEN 5: UPSELL -->
+<div id="upsellScreen" class="screen">
+  <div class="upsell-wrap">
+    <div class="upsell-card">
+      <div class="upsell-label">Free Trial Complete</div>
+      <h2 class="upsell-title">You&rsquo;ve completed<br/>your 10 free lessons.</h2>
+      <div class="upsell-divider"></div>
+      <p class="upsell-sub">You&rsquo;ve experienced PrecisionStep Tutorials &mdash; programmed learning that takes you from curiosity to understanding, one precise micro-step at a time. Subscribe to unlock unlimited lessons on any subject, at any level, for as long as you like.</p>
+      <a href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" class="btn-subscribe" target="_blank">Subscribe Now &nbsp;&rarr;</a>
+      <p class="upsell-note">Unlimited subjects &middot; Unlimited lessons &middot; Cancel anytime</p>
+      <p class="page-footer">Questions? <a href="mailto:ask@level33tutorials.com">ask@level33tutorials.com</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 6: LESSON COMPLETE -->
+<div id="completeScreen" class="screen">
+  <div class="complete-wrap">
+    <div class="complete-card">
+      <div class="frame-type" style="text-align:center;margin-bottom:1.4rem;">Lesson Complete</div>
+      <h2 class="complete-title">You&rsquo;ve finished the lesson.</h2>
+      <p class="complete-sub" id="completeSubText"></p>
+      <p class="complete-trial-note" id="completeTrialNote"></p>
+      <div class="btn-row" style="justify-content:center;gap:1rem;flex-direction:column;align-items:center;">
+        <button class="btn-primary" id="newSubjectBtn">Try Another Lesson</button>
+        <a href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" class="btn-subscribe" target="_blank">Subscribe for Unlimited Access &nbsp;&rarr;</a>
+      </div>
+      <p class="page-footer" style="margin-top:1.6rem;"><a href="mailto:ask@level33tutorials.com">ask@level33tutorials.com</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const FREE_TRIAL_LIMIT = 10;
+const LETTERS = ['A','B','C','D'];
+
+let trialEmail = '', lessonsUsed = 0;
+let frames = [], frameIdx = 0, pageType = 'lesson', selected = null;
+let subject = '', lessonCount = 10, learningLevel = 'intermediate', educationLevel = '';
+let interstitialShown = false;
+
+// ── TRIAL TRACKING (counts completed lessons) ─────────────────────────────────
+function trialKey(e) { return 'l33_trial_' + e.toLowerCase().trim(); }
+function loadTrialData(email) {
+  try { const d = localStorage.getItem(trialKey(email)); lessonsUsed = d ? (JSON.parse(d).lessonsUsed || 0) : 0; }
+  catch(e) { lessonsUsed = 0; }
+}
+function saveTrialData() {
+  try { localStorage.setItem(trialKey(trialEmail), JSON.stringify({ email: trialEmail, lessonsUsed })); }
+  catch(e) {}
+}
+function getRemainingLessons() { return Math.max(0, FREE_TRIAL_LIMIT - lessonsUsed); }
+function lessonWord(n) { return n === 1 ? 'lesson' : 'lessons'; }
+function updateLessonsRemainingText() {
+  const rem = getRemainingLessons();
+  const el = document.getElementById('lessonsRemainingText');
+  if (el) el.textContent = rem + ' free ' + lessonWord(rem) + ' remaining in your trial';
+}
+function updateTrialCounterBar() {
+  const rem = getRemainingLessons();
+  const el = document.getElementById('trialCounterBar');
+  if (el) el.textContent = rem + ' free ' + lessonWord(rem) + ' remaining in your trial';
+}
+
+// ── SCREEN ────────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+  const el = document.getElementById(id);
+  el.style.display = 'flex'; void el.offsetWidth; el.classList.add('active');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getLevelLabel(l) { return {beginner:'Beginner',intermediate:'Intermediate',advanced:'Advanced'}[l]||'Intermediate'; }
+function getEduLabel(e)   { return {elementary:'Elementary',middle_school:'Middle School',high_school:'High School',college:'College +'}[e]||''; }
+function updateSettingsSummary() {
+  const edu = getEduLabel(educationLevel);
+  document.getElementById('settingsSummary').textContent = lessonCount + '-frame · ' + getLevelLabel(learningLevel) + (edu ? ' · ' + edu : '') + ' lesson';
+}
+function parseJSON(text) {
+  const s = text.indexOf('['), e = text.lastIndexOf(']');
+  if (s === -1 || e === -1) throw new Error('No JSON array found.');
+  return JSON.parse(text.slice(s, e + 1));
+}
+function buildFrameGuide(n) {
+  const a = Math.max(1, Math.ceil(n*0.33)), b = Math.max(a+1, Math.ceil(n*0.62));
+  const c = Math.max(b+1, Math.ceil(n*0.82)), d = c+1;
+  let g = `Frames 1-${a}: introduce foundational concepts. `;
+  if (b>a) g += `Frames ${a+1}-${b}: build on them with more detail. `;
+  if (c>b) g += `Frames ${b+1}-${c}: introduce slightly more advanced points. `;
+  if (d<=n) g += `Frames ${d}-${n}: REVIEW frames revisiting earlier concepts with different wording. Mark these is_review: true.`;
+  return g;
+}
+function levelInstructions(l) {
+  if (l==='beginner') return 'Use simple, everyday language. Assume no prior knowledge. Define every technical term on first use. Use relatable analogies. Keep sentences short and clear.';
+  if (l==='advanced') return 'Use precise technical language for an expert audience. Assume solid prior knowledge. Explore nuance and deeper mechanisms.';
+  return 'Use standard subject terminology. Assume basic familiarity. Balance clarity with depth. Briefly define specialised terms but do not dwell on basics.';
+}
+function eduInstructions(edu) {
+  if (edu==='elementary')    return 'The learner is an elementary school student (ages 6-11). Use short sentences, simple everyday words, concrete examples. Avoid jargon.';
+  if (edu==='middle_school') return 'The learner is a middle school student (ages 11-14). Use clear language. Introduce terms but always explain them plainly.';
+  if (edu==='high_school')   return 'The learner is a high school student (ages 14-18). Use standard academic language. Define technical terms properly.';
+  if (edu==='college')       return 'The learner is at college level or beyond (18+). Use full academic vocabulary. Assume strong foundational knowledge.';
+  return '';
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────────
+async function generateCourse(subj, count, level, edu) {
+  const frameGuide = buildFrameGuide(count);
+  const levelNote  = levelInstructions(level);
+  const eduNote    = edu ? eduInstructions(edu) : '';
+  const audienceNote = eduNote
+    ? `Educational level: ${getEduLabel(edu)}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`
+    : `Difficulty calibration: ${levelNote}`;
+  const prompt = `You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording.\n\nCRITICAL — correct answer placement:\n- Frame 1: correct_index must be 0.\n- Frame 2: correct_index must be 0.\n- Frame 3 onward: distribute correct_index unpredictably across 0,1,2,3. Never repeat same position two frames in a row.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
+  const res = await fetch('/.netlify/functions/generate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ accessCode:'TRIAL-FREE', model:'claude-haiku-4-5-20251001', max_tokens:6000, messages:[{role:'user',content:prompt}], subject:subj, frameCount:count, eduLevel:edu, learnLevel:level, trialEmail })
+  });
+  const data = await res.json();
+  // 403 means trial is exhausted server-side — trigger upsell screen
+  if (res.status === 403 && data.trialComplete) {
+    lessonsUsed = 10;
+    saveTrialData();
+    showScreen('upsellScreen');
+    throw new Error('TRIAL_COMPLETE');
+  }
+  if (!res.ok) { throw new Error(data.error?.message||`API error ${res.status}`); }
+  // Sync server-side lesson count to localStorage
+  if (typeof data.lessonsUsed === 'number') {
+    lessonsUsed = data.lessonsUsed;
+    saveTrialData();
+    updateLessonsRemainingText();
+  }
+  return parseJSON((data.content||[]).map(b=>b.text||'').join(''));
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────────
+function updateProgress() {
+  const total = frames.length*3, done = frameIdx*3+(pageType==='lesson'?0:pageType==='question'?1:2);
+  document.getElementById('progressFill').style.width = (total?(done/total)*100:0)+'%';
+  if (pageType==='interstitial') { document.getElementById('pageCounter').textContent=''; return; }
+  const frame=frames[frameIdx], rt=frame&&frame.is_review?'  ·  ✦ Review':'';
+  document.getElementById('pageCounter').textContent=`Frame ${frameIdx+1} of ${frames.length}`+rt;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderCard() {
+  const card=document.getElementById('card'), frame=frames[frameIdx];
+  updateProgress(); updateTrialCounterBar();
+  let html='';
+  if (pageType==='interstitial') {
+    card.className='card interstitial-card';
+    html=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;"><div class="frame-type" style="color:var(--gold-deeper);letter-spacing:0.38em;">PrecisionStep</div><div class="interstitial-divider"></div><p class="interstitial-text">You&rsquo;ve got the feel for it. We will now place the correct answer anywhere in the order of answer choices.</p></div><div class="btn-row" style="justify-content:center;"><button class="btn-primary" id="actionBtn">Continue &nbsp;&rarr;</button></div>`;
+    card.innerHTML=html; document.getElementById('actionBtn')?.addEventListener('click',handleAction); return;
+  }
+  card.className='card'; if(!frame)return;
+  const rc=frame.is_review?' review':'', fl=frame.is_review?'✦ Review':`Lesson ${frameIdx+1}`;
+  if (pageType==='lesson') {
+    const lh=frame.lesson.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    html=`<div><div class="frame-type${rc}">${fl}</div><p class="lesson-text">${lh}</p></div><div class="btn-row"><button class="btn-primary" id="actionBtn">Continue &nbsp;&rarr;</button></div>`;
+  } else if (pageType==='question') {
+    const oh=frame.options.map((o,i)=>`<button class="option${selected===i?' selected':''}" data-idx="${i}"><span class="opt-letter">${LETTERS[i]}</span><span>${o}</span></button>`).join('');
+    html=`<div><div class="frame-type">Question</div><p class="question-text">${frame.question}</p><div class="options">${oh}</div></div><div class="btn-row"><button class="btn-primary" id="actionBtn" ${selected===null?'disabled':''}>Check Answer &nbsp;&rarr;</button></div>`;
+  } else {
+    const oh=frame.options.map((o,i)=>{const c='option'+(i===frame.correct_index?' correct':(i===selected?' wrong':''));return`<div class="${c}"><span class="opt-letter">${LETTERS[i]}</span><span>${o}</span></div>`;}).join('');
+    const isLast=frameIdx+1>=frames.length;
+    html=`<div><div class="frame-type">Answer</div><div class="options" style="margin-bottom:1.1rem;">${oh}</div><div class="answer-box"><div class="answer-label">Explanation</div><p class="answer-text">${frame.explanation}</p></div></div><div class="btn-row"><button class="btn-primary" id="actionBtn">${isLast?'Complete Lesson':'Next Frame &nbsp;&rarr;'}</button></div>`;
+  }
+  card.innerHTML=html;
+  document.getElementById('actionBtn')?.addEventListener('click',handleAction);
+  if (pageType==='question') card.querySelectorAll('.option').forEach(btn=>btn.addEventListener('click',()=>{selected=parseInt(btn.dataset.idx,10);renderCard();}));
+}
+
+// ── HANDLE ACTION ─────────────────────────────────────────────────────────────
+function handleAction() {
+  if (pageType==='interstitial') { interstitialShown=true; frameIdx++; pageType='lesson'; selected=null; renderCard(); return; }
+  if (pageType==='lesson') { pageType='question'; selected=null; renderCard(); }
+  else if (pageType==='question') { if(selected===null)return; pageType='answer'; renderCard(); }
+  else {
+    const isLast=frameIdx+1>=frames.length;
+    if (isLast) {
+      // Lesson fully completed — count it
+      lessonsUsed++;
+      saveTrialData();
+      const rem=getRemainingLessons();
+      document.getElementById('completeSubText').textContent=`"${subject}" — ${frames.length} frames · ${getLevelLabel(learningLevel)}${getEduLabel(educationLevel)?' · '+getEduLabel(educationLevel):''}`;
+      document.getElementById('completeTrialNote').textContent = rem > 0
+        ? rem + ' free ' + lessonWord(rem) + ' remaining in your trial.'
+        : 'You have now completed all 10 of your free lessons.';
+      showScreen('completeScreen');
+    } else if (frameIdx===1 && !interstitialShown) {
+      pageType='interstitial'; renderCard();
+    } else {
+      frameIdx++; pageType='lesson'; selected=null; renderCard();
+    }
+  }
+}
+
+// ── START LESSON ──────────────────────────────────────────────────────────────
+async function startCourse(subj) {
+  subject=subj.trim(); interstitialShown=false;
+  document.getElementById('loadingText').textContent=`Composing your ${lessonCount}-frame ${getLevelLabel(learningLevel)} lesson on "${subject}"…`;
+  showScreen('loadingScreen');
+  try {
+    frames=await generateCourse(subject,lessonCount,learningLevel,educationLevel);
+    frameIdx=0; pageType='lesson'; selected=null;
+    const se=document.getElementById('sessionEdu');
+    if(educationLevel){se.textContent=getEduLabel(educationLevel);se.style.display='';}else{se.style.display='none';}
+    document.getElementById('sessionLevel').textContent=getLevelLabel(learningLevel);
+    document.getElementById('sessionFrames').textContent=frames.length+' frames';
+    updateTrialCounterBar(); showScreen('bookScreen'); renderCard();
+  } catch(e) {
+    // TRIAL_COMPLETE is handled inside generateCourse — upsell screen already shown
+    if (e.message === 'TRIAL_COMPLETE') return;
+    document.getElementById('introError').textContent='Lesson generation failed. Please check your connection and try again.';
+    showScreen('trialIntroScreen');
+  }
+}
+
+// ── ENTRY SCREEN ──────────────────────────────────────────────────────────────
+const trialEmailInput=document.getElementById('trialEmail');
+const ageCheckbox=document.getElementById('ageCheck');
+const beginTrialBtn=document.getElementById('beginTrialBtn');
+const entryError=document.getElementById('entryError');
+function checkEntryReady(){ beginTrialBtn.disabled=!(trialEmailInput.value.includes('@')&&ageCheckbox.checked); }
+trialEmailInput.addEventListener('input',()=>{entryError.textContent='';checkEntryReady();});
+ageCheckbox.addEventListener('change',checkEntryReady);
+beginTrialBtn.addEventListener('click',()=>{
+  const email=trialEmailInput.value.trim();
+  if(!email||!email.includes('@')){entryError.textContent='Please enter a valid email address.';return;}
+  if(!ageCheckbox.checked){entryError.textContent='Please confirm your age to continue.';return;}
+  trialEmail=email; loadTrialData(trialEmail);
+  if(getRemainingLessons()<=0){showScreen('upsellScreen');return;}
+  updateLessonsRemainingText(); showScreen('trialIntroScreen');
+  document.getElementById('subjectInput').focus();
+});
+
+// ── INTRO SCREEN ──────────────────────────────────────────────────────────────
+const subjectInput=document.getElementById('subjectInput');
+const startBtn=document.getElementById('startBtn');
+const frameSlider=document.getElementById('frameSlider');
+subjectInput.addEventListener('input',()=>{startBtn.disabled=subjectInput.value.trim().length===0;document.getElementById('introError').textContent='';});
+subjectInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&subjectInput.value.trim())startCourse(subjectInput.value);});
+startBtn.addEventListener('click',()=>{if(subjectInput.value.trim())startCourse(subjectInput.value);});
+frameSlider.addEventListener('input',()=>{lessonCount=parseInt(frameSlider.value,10);document.getElementById('frameCountDisplay').innerHTML=`${lessonCount} <span>frames</span>`;updateSettingsSummary();});
+document.querySelectorAll('.edu-pill').forEach(pill=>{pill.addEventListener('click',()=>{document.querySelectorAll('.edu-pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');educationLevel=pill.dataset.edu;updateSettingsSummary();});});
+document.querySelectorAll('.level-pill').forEach(pill=>{pill.addEventListener('click',()=>{document.querySelectorAll('.level-pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');learningLevel=pill.dataset.level;updateSettingsSummary();});});
+
+// ── COMPLETE SCREEN ───────────────────────────────────────────────────────────
+document.getElementById('newSubjectBtn').addEventListener('click',()=>{
+  if(getRemainingLessons()<=0){showScreen('upsellScreen');return;}
+  subjectInput.value=''; startBtn.disabled=true;
+  document.getElementById('introError').textContent='';
+  updateLessonsRemainingText(); showScreen('trialIntroScreen'); subjectInput.focus();
+});
+</script>
+</body>
+</html>
