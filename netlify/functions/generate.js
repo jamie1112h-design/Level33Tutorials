@@ -53,6 +53,111 @@ exports.handler = async (event) => {
     };
   }
 
+  // ── Free trial path ──────────────────────────────────────────────────────────
+  // TRIAL-FREE validates and tracks trial users in Supabase.
+  // lessons_used is the server-side source of truth — closes the multi-device loophole.
+  if (codeClean === "TRIAL-FREE") {
+    const { trialEmail } = payload;
+    const emailClean = (trialEmail || "").trim().toLowerCase();
+
+    if (!emailClean || !emailClean.includes("@")) {
+      return {
+        statusCode: 400,
+        headers: corsJson(),
+        body: JSON.stringify({ error: { message: "A valid email address is required for the free trial." } })
+      };
+    }
+
+    try {
+      // Upsert trial user — create if new, update last_seen_at if returning
+      const upsertRes = await fetch(
+        `${supabaseUrl}/rest/v1/trial_users`,
+        {
+          method: "POST",
+          headers: {
+            "apikey":        supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`,
+            "Content-Type":  "application/json",
+            "Prefer":        "resolution=merge-duplicates,return=representation"
+          },
+          body: JSON.stringify({
+            email:        emailClean,
+            last_seen_at: new Date().toISOString()
+          })
+        }
+      );
+
+      const upsertRows = await upsertRes.json();
+      if (!Array.isArray(upsertRows) || upsertRows.length === 0) {
+        throw new Error("Upsert returned no rows.");
+      }
+
+      const trialUser   = upsertRows[0];
+      const lessonsUsed = trialUser.lessons_used || 0;
+      const FREE_LIMIT  = 10;
+
+      // Trial exhausted — return 403 so the client shows the upsell screen
+      if (lessonsUsed >= FREE_LIMIT) {
+        return {
+          statusCode: 403,
+          headers: corsJson(),
+          body: JSON.stringify({
+            trialComplete: true,
+            error: { message: "Your 10 free lessons are complete. Subscribe to continue." }
+          })
+        };
+      }
+
+      // Generate the lesson
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type":      "application/json",
+          "x-api-key":         apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model:      model      || "claude-haiku-4-5-20251001",
+          max_tokens: max_tokens || 6000,
+          messages
+        })
+      });
+
+      const data = await anthropicRes.json();
+
+      // Only increment lessons_used after a successful generation
+      if (anthropicRes.ok) {
+        await fetch(
+          `${supabaseUrl}/rest/v1/trial_users?email=eq.${encodeURIComponent(emailClean)}`,
+          {
+            method: "PATCH",
+            headers: {
+              "apikey":        supabaseKey,
+              "Authorization": `Bearer ${supabaseKey}`,
+              "Content-Type":  "application/json"
+            },
+            body: JSON.stringify({ lessons_used: lessonsUsed + 1 })
+          }
+        );
+      }
+
+      return {
+        statusCode: anthropicRes.status,
+        headers:    corsJson(),
+        body:       JSON.stringify({ ...data, lessonsUsed: lessonsUsed + 1 })
+      };
+
+    } catch (err) {
+      console.error("Trial path error:", err);
+      return {
+        statusCode: 502,
+        headers:    corsJson(),
+        body:       JSON.stringify({ error: { message: "Could not process your trial request. Please try again." } })
+      };
+    }
+  }
+
   let subscriberId = null;
 
   try {
