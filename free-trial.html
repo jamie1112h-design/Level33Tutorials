@@ -427,9 +427,8 @@ function handleAction() {
   else {
     const isLast=frameIdx+1>=frames.length;
     if (isLast) {
-      // Lesson fully completed — capture remaining BEFORE incrementing for display
-      const rem=getRemainingLessons() - 1;
-      lessonsUsed++;
+      // Server already incremented lessonsUsed at generation time — just display current value
+      const rem=getRemainingLessons();
       saveTrialData();
       document.getElementById('completeSubText').textContent=`"${subject}" — ${frames.length} frames · ${getLevelLabel(learningLevel)}${getEduLabel(educationLevel)?' · '+getEduLabel(educationLevel):''}`;
       document.getElementById('completeTrialNote').textContent = rem > 0
