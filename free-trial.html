@@ -403,6 +403,12 @@ const STRINGS = {
 const FREE_TRIAL_LIMIT = 10;
 const LETTERS = ['A','B','C','D'];
 let currentLang = "en";
+
+// Apply language from URL parameter immediately if present
+(function() {
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  if (urlLang && STRINGS[urlLang]) currentLang = urlLang;
+})();
 let trialEmail = '', lessonsUsed = 0;
 let frames = [], frameIdx = 0, pageType = 'lesson', selected = null;
 let subject = '', lessonCount = 10, learningLevel = 'intermediate', educationLevel = '';
@@ -430,6 +436,9 @@ function applyLanguage(lang) {
 }
 
 document.querySelectorAll(".lang-btn").forEach(btn => { btn.addEventListener("click", () => applyLanguage(btn.dataset.lang)); });
+
+// Apply initial language (from URL param or default English)
+applyLanguage(currentLang);
 
 // ── TRIAL TRACKING ────────────────────────────────────────────────────────────
 function trialKey(e) { return 'l33_trial_' + e.toLowerCase().trim(); }
