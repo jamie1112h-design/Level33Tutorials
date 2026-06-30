@@ -1,4 +1,4 @@
-// Level 33 Tutorials — get-code.js
+// PrecisionSteps Tutorials — get-code.js
 // Polled by the welcome page after Stripe checkout.
 // Looks up the access code by Stripe checkout session ID.
 // Returns the code once the webhook has processed it, 404 if not yet ready.

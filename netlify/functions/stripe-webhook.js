@@ -1,4 +1,4 @@
-// Level 33 Tutorials — stripe-webhook.js
+// PrecisionSteps Tutorials — stripe-webhook.js
 // Handles Stripe subscription events:
 //   checkout.session.completed       → generate access code, write to Supabase, email subscriber
 //   customer.subscription.deleted    → mark subscriber as cancelled in Supabase
@@ -12,7 +12,7 @@
 //   SUPABASE_URL            — your Supabase project URL
 //   SUPABASE_SERVICE_KEY    — your Supabase secret key
 //   RESEND_API_KEY          — your Resend API key
-//   RESEND_FROM_ADDRESS     — e.g. access@level33tutorials.com
+//   RESEND_FROM_ADDRESS     — e.g. access@precisionstepstutorials.com
 
 const stripe = require("stripe");
 
@@ -191,7 +191,7 @@ function generateAccessCode() {
     Array.from({ length: 4 }, () =>
       chars[Math.floor(Math.random() * chars.length)]
     ).join("");
-  return `L33-${segment()}-${segment()}`;
+  return `PST-${segment()}-${segment()}`;
 }
 
 // ── Send welcome email via Resend ─────────────────────────────────────────────
@@ -205,7 +205,7 @@ async function sendWelcomeEmail(email, code) {
     body: JSON.stringify({
       from:    process.env.RESEND_FROM_ADDRESS,
       to:      email,
-      subject: "Your Level 33 Tutorials Access Code",
+      subject: "Your PrecisionSteps Tutorials Access Code",
       html: `
 <!DOCTYPE html>
 <html>
@@ -218,7 +218,7 @@ async function sendWelcomeEmail(email, code) {
                style="background:#fff9f0;border:1px solid rgba(155,120,65,0.25);border-radius:4px;padding:2.5rem 2.8rem;max-width:520px;">
           <tr>
             <td style="padding-bottom:0.3rem;">
-              <p style="margin:0;font-size:0.65rem;letter-spacing:0.45em;text-transform:uppercase;color:#9a7a45;">Level 33 Mastermind</p>
+              <p style="margin:0;font-size:0.65rem;letter-spacing:0.45em;text-transform:uppercase;color:#9a7a45;">PrecisionSteps Tutorials</p>
             </td>
           </tr>
           <tr>
@@ -242,7 +242,7 @@ async function sendWelcomeEmail(email, code) {
           <tr>
             <td style="padding-bottom:1.4rem;">
               <p style="margin:0;font-size:1rem;line-height:1.75;color:#2a1f0e;">
-                Visit <a href="https://level33tutorials.com" style="color:#9a7a45;text-decoration:none;border-bottom:1px solid rgba(155,120,65,0.4);">level33tutorials.com</a>, enter your code, and your first session begins. The app will remember your code on that device.
+                Visit <a href="https://precisionstepstutorials.com" style="color:#9a7a45;text-decoration:none;border-bottom:1px solid rgba(155,120,65,0.4);">precisionstepstutorials.com</a>, enter your code, and your first session begins. The app will remember your code on that device.
               </p>
             </td>
           </tr>
@@ -253,7 +253,7 @@ async function sendWelcomeEmail(email, code) {
           </tr>
           <tr>
             <td style="border-top:1px solid rgba(155,120,65,0.18);padding-top:1.2rem;">
-              <p style="margin:0;font-size:0.72rem;color:#9a7050;letter-spacing:0.05em;">Level 33 Mastermind &nbsp;&middot;&nbsp; level33tutorials.com</p>
+              <p style="margin:0;font-size:0.72rem;color:#9a7050;letter-spacing:0.05em;">PrecisionSteps Tutorials &nbsp;&middot;&nbsp; precisionstepstutorials.com</p>
             </td>
           </tr>
         </table>
@@ -281,7 +281,7 @@ async function sendTrialEndingEmail(email) {
     body: JSON.stringify({
       from:    process.env.RESEND_FROM_ADDRESS,
       to:      email,
-      subject: "Your Level 33 free trial ends in 3 days",
+      subject: "Your PrecisionSteps Tutorials free trial ends in 3 days",
       html: `
 <!DOCTYPE html>
 <html>
@@ -294,7 +294,7 @@ async function sendTrialEndingEmail(email) {
                style="background:#fff9f0;border:1px solid rgba(155,120,65,0.25);border-radius:4px;padding:2.5rem 2.8rem;max-width:520px;">
           <tr>
             <td style="padding-bottom:0.3rem;">
-              <p style="margin:0;font-size:0.65rem;letter-spacing:0.45em;text-transform:uppercase;color:#9a7a45;">Level 33 Mastermind</p>
+              <p style="margin:0;font-size:0.65rem;letter-spacing:0.45em;text-transform:uppercase;color:#9a7a45;">PrecisionSteps Tutorials</p>
             </td>
           </tr>
           <tr>
@@ -305,7 +305,7 @@ async function sendTrialEndingEmail(email) {
           <tr>
             <td style="padding-top:1.8rem;padding-bottom:1.4rem;">
               <p style="margin:0;font-size:1.05rem;line-height:1.75;color:#2a1f0e;">
-                Your free trial of the Level 33 Programmed Learning Machine ends in 3 days. No action is needed — your subscription will continue seamlessly and your card will be charged at that point.
+                Your free trial of the PrecisionSteps Tutorials Programmed Learning Machine ends in 3 days. No action is needed — your subscription will continue seamlessly and your card will be charged at that point.
               </p>
             </td>
           </tr>
@@ -318,7 +318,7 @@ async function sendTrialEndingEmail(email) {
           </tr>
           <tr>
             <td style="border-top:1px solid rgba(155,120,65,0.18);padding-top:1.2rem;">
-              <p style="margin:0;font-size:0.72rem;color:#9a7050;letter-spacing:0.05em;">Level 33 Mastermind &nbsp;&middot;&nbsp; level33tutorials.com</p>
+              <p style="margin:0;font-size:0.72rem;color:#9a7050;letter-spacing:0.05em;">PrecisionSteps Tutorials &nbsp;&middot;&nbsp; precisionstepstutorials.com</p>
             </td>
           </tr>
         </table>

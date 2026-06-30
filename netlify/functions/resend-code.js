@@ -1,4 +1,4 @@
-// Level 33 Tutorials — resend-code.js
+// PrecisionSteps Tutorials — resend-code.js
 // Self-service access code recovery.
 // Looks up the subscriber by email and resends their access code via Resend.
 //
@@ -87,17 +87,17 @@ exports.handler = async (event) => {
     const emailBody = {
       from:    fromAddr,
       to:      [email],
-      subject: "Your Level 33 access code",
+      subject: "Your PrecisionSteps Tutorials access code",
       html: `
         <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#2a1f0e;background:#f5f0e8;">
-          <p style="font-size:0.7rem;letter-spacing:0.4em;text-transform:uppercase;color:#9a7a45;margin-bottom:0.5rem;">Level 33 Mastermind</p>
+          <p style="font-size:0.7rem;letter-spacing:0.4em;text-transform:uppercase;color:#9a7a45;margin-bottom:0.5rem;">PrecisionSteps Tutorials</p>
           <h1 style="font-size:1.6rem;font-weight:400;margin-bottom:1.5rem;border-bottom:1px solid #b8965a;padding-bottom:1rem;">Your access code</h1>
-          <p style="font-size:1rem;font-weight:300;line-height:1.7;margin-bottom:1.5rem;">Here is your access code for the Level 33 Programmed Learning Machine:</p>
+          <p style="font-size:1rem;font-weight:300;line-height:1.7;margin-bottom:1.5rem;">Here is your access code for the PrecisionSteps Tutorials Programmed Learning Machine:</p>
           <div style="background:#fff;border:1px solid rgba(155,120,65,0.3);border-radius:4px;padding:1.2rem 1.8rem;font-size:1.5rem;font-family:monospace;letter-spacing:0.15em;color:#2a1f0e;text-align:center;margin-bottom:1.5rem;">
             ${access_code}
           </div>
           <p style="font-size:0.9rem;font-weight:300;line-height:1.7;margin-bottom:1.5rem;">
-            <a href="https://level33tutorials.com" style="color:#9a7a45;">Return to level33tutorials.com</a> and enter this code at the gate to begin your session.
+            <a href="https://precisionstepstutorials.com" style="color:#9a7a45;">Return to precisionstepstutorials.com</a> and enter this code at the gate to begin your session.
           </p>
           <p style="font-size:0.8rem;color:#8a7050;font-style:italic;">If you did not request this email, you can safely ignore it.</p>
         </div>

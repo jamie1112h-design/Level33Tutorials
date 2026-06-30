@@ -1,4 +1,4 @@
-// Level 33 Tutorials — complete-session.js
+// PrecisionSteps Tutorials — complete-session.js
 // Called by the client when a course is completed.
 // Updates the session row: sets completed = true.
 // Optionally accepts frame_scores and score_pct for in-lesson scoring.

@@ -1,4 +1,4 @@
-// Level 33 Tutorials — generate.js
+// PrecisionSteps Tutorials — generate.js
 // Validates subscriber access code against Supabase, logs the session,
 // then proxies the course generation request to Anthropic API.
 //
@@ -178,7 +178,7 @@ exports.handler = async (event) => {
         statusCode: 401,
         headers: corsJson(),
         body: JSON.stringify({
-          error: { message: "Invalid access code. Visit level33tutorials.com to purchase access." }
+          error: { message: "Invalid access code. Visit precisionstepstutorials.com to purchase access." }
         })
       };
     }
@@ -188,7 +188,7 @@ exports.handler = async (event) => {
         statusCode: 403,
         headers: corsJson(),
         body: JSON.stringify({
-          error: { message: "Your subscription is no longer active. Please renew at level33tutorials.com." }
+          error: { message: "Your subscription is no longer active. Please renew at precisionstepstutorials.com." }
         })
       };
     }

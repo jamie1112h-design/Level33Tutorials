@@ -1,4 +1,4 @@
-// Level 33 Tutorials — validate.js
+// PrecisionSteps Tutorials — validate.js
 // Lightweight access code validation against Supabase.
 // Used by the auto-login check on page load — no Anthropic call involved.
 //
