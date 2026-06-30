@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Welcome — Level 33 Mastermind</title>
+<title>Welcome — PrecisionSteps Tutorials</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -226,7 +226,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="logo-mark">Level 33 Mastermind</div>
+  <div class="logo-mark">PrecisionSteps Tutorials</div>
   <div class="brand">Programmed Learning Machine</div>
   <div class="divider"></div>
 
@@ -259,7 +259,7 @@
   <div id="fallbackState">
     <h1 class="fallback-title">Check your inbox.</h1>
     <p class="fallback-sub">Your payment was successful. Your access code is on its way to your email address. Return to the site and enter it at the gate when it arrives.</p>
-    <a href="/" class="back-link">Return to level33tutorials.com &rarr;</a>
+    <a href="/" class="back-link">Return to precisionstepstutorials.com &rarr;</a>
   </div>
 </div>
 
@@ -309,8 +309,8 @@
     // Pre-fill the gate input and set cookies when Enter the gate is clicked
     document.getElementById("enterBtn").addEventListener("click", e => {
       e.preventDefault();
-      setCookie("l33_access_code",    code,                    30);
-      setCookie("l33_validated_at",   Date.now().toString(),   30);
+      setCookie("pst_access_code",    code,                    30);
+      setCookie("pst_validated_at",   Date.now().toString(),   30);
       window.location.href = "/";
     });
 
