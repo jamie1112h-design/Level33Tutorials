@@ -267,7 +267,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
       <h2 class="upsell-title" data-i18n="upsellTitle">You&rsquo;ve completed<br/>your 10 free lessons.</h2>
       <div class="upsell-divider"></div>
       <p class="upsell-sub" data-i18n="upsellSub">You&rsquo;ve experienced PrecisionSteps Tutorials &mdash; programmed learning that takes you from curiosity to understanding, one precise micro-step at a time. Subscribe to unlock unlimited lessons on any subject, at any level, for as long as you like.</p>
-      <a href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" class="btn-subscribe" target="_blank" data-i18n="subscribeBtn">Subscribe Now &nbsp;&rarr;</a>
+      <a href="#" id="subscribeLinkUpsell" class="btn-subscribe" target="_blank" data-i18n="subscribeBtn">Subscribe Now &nbsp;&rarr;</a>
       <p class="upsell-note" data-i18n="upsellNote">Unlimited subjects &middot; Unlimited lessons &middot; Cancel anytime</p>
       <p class="page-footer"><span data-i18n="questionsLabel">Questions?</span> <a href="mailto:ask@precisionstepstutorials.com">ask@precisionstepstutorials.com</a></p>
     </div>
@@ -284,7 +284,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
       <p class="complete-trial-note" id="completeTrialNote"></p>
       <div class="btn-row" style="justify-content:center;gap:1rem;flex-direction:column;align-items:center;">
         <button class="btn-primary" id="newSubjectBtn" data-i18n="tryAnotherBtn">Try Another Lesson</button>
-        <a href="https://buy.stripe.com/6oUaEZgp78Lx7mm3OpdQQ00" class="btn-subscribe" target="_blank" data-i18n="subscribeUnlimitedBtn">Subscribe for Unlimited Access &nbsp;&rarr;</a>
+        <a href="#" id="subscribeLinkComplete" class="btn-subscribe" target="_blank" data-i18n="subscribeUnlimitedBtn">Subscribe for Unlimited Access &nbsp;&rarr;</a>
       </div>
       <p class="page-footer" style="margin-top:1.6rem;"><a href="mailto:ask@precisionstepstutorials.com">ask@precisionstepstutorials.com</a></p>
     </div>
@@ -292,6 +292,13 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
 </div>
 
 <script>
+// ── Stripe account-specific URL, centralized so a future account swap
+// (e.g. moving PrecisionSteps to its own dedicated Stripe account, per
+// ScriptBDL Decisions 161-164) is a one-line edit here, not a hunt across
+// files. Currently the shared "Jamie Hill" account's Payment Link --
+// same constant/value as index.html's STRIPE_PAYMENT_LINK. ──
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/14AaEW4eY2Pg22h7w0e7m00";
+
 const STRINGS = {
   en: {
     htmlLang: "en",
@@ -672,6 +679,14 @@ const ageCheckbox=document.getElementById('ageCheck');
 const beginTrialBtn=document.getElementById('beginTrialBtn');
 const entryError=document.getElementById('entryError');
 function checkEntryReady(){ beginTrialBtn.disabled=!(trialEmailInput.value.includes('@')&&ageCheckbox.checked); }
+
+// Wired from the centralized STRIPE_PAYMENT_LINK constant above, not
+// hardcoded here -- a Stripe-account swap only ever needs that one
+// constant updated.
+['subscribeLinkUpsell','subscribeLinkComplete'].forEach(id=>{
+  const el=document.getElementById(id);
+  if (el) el.href = STRIPE_PAYMENT_LINK;
+});
 trialEmailInput.addEventListener('input',()=>{entryError.textContent='';checkEntryReady();});
 ageCheckbox.addEventListener('change',checkEntryReady);
 beginTrialBtn.addEventListener('click',()=>{
