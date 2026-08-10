@@ -94,7 +94,7 @@ exports.handler = async (event) => {
 
       const trialUser   = upsertRows[0];
       const lessonsUsed = trialUser.lessons_used || 0;
-      const FREE_LIMIT  = 10;
+      const FREE_LIMIT  = 5;
 
       // Trial exhausted — return 403 so the client shows the upsell screen
       if (lessonsUsed >= FREE_LIMIT) {
@@ -103,7 +103,7 @@ exports.handler = async (event) => {
           headers: corsJson(),
           body: JSON.stringify({
             trialComplete: true,
-            error: { message: "Your 10 free lessons are complete. Subscribe to continue." }
+            error: { message: "Your 5 free lessons are complete. Subscribe to continue." }
           })
         };
       }
