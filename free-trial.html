@@ -542,7 +542,7 @@ async function generateCourse(subj, count, level, edu) {
   const prompt = `You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n${langNote?"\nLanguage instruction: "+langNote:""}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording.\n- Set correct_index to 0 for every frame. Answer placement will be randomised automatically after generation.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
   const res = await fetch('/.netlify/functions/generate', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ accessCode:'TRIAL-FREE', model:'claude-haiku-4-5-20251001', max_tokens:6000, messages:[{role:'user',content:prompt}], subject:subj, frameCount:count, eduLevel:edu, learnLevel:level, trialEmail })
+    body: JSON.stringify({ accessCode:'TRIAL-FREE', model:'claude-sonnet-5', max_tokens:6000, messages:[{role:'user',content:prompt}], subject:subj, frameCount:count, eduLevel:edu, learnLevel:level, trialEmail })
   });
   const data = await res.json();
   if (res.status === 403 && data.trialComplete) {
