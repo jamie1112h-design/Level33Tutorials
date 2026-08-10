@@ -119,7 +119,8 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify({
           model:      model      || "claude-sonnet-5",
-          max_tokens: max_tokens || 6000,
+          max_tokens: max_tokens || 8000,
+          thinking:   { type: "disabled" },
           messages
         })
       });
@@ -252,7 +253,8 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         model:      model      || "claude-sonnet-5",
-        max_tokens: max_tokens || 6000,
+        max_tokens: max_tokens || 8000,
+        thinking:   { type: "disabled" },
         messages
       })
     });
