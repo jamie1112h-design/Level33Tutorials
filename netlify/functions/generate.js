@@ -118,7 +118,7 @@ exports.handler = async (event) => {
           "anthropic-version": "2023-06-01"
         },
         body: JSON.stringify({
-          model:      model      || "claude-haiku-4-5-20251001",
+          model:      model      || "claude-sonnet-5",
           max_tokens: max_tokens || 6000,
           messages
         })
@@ -251,7 +251,7 @@ exports.handler = async (event) => {
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model:      model      || "claude-haiku-4-5-20251001",
+        model:      model      || "claude-sonnet-5",
         max_tokens: max_tokens || 6000,
         messages
       })
