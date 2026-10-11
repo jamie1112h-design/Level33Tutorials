@@ -1,4 +1,5 @@
-// PrecisionSteps Tutorials — resend-code.js
+// PrecisionSteps Tutorials – resend-code.js (version 2). Deploy as netlify/functions/resend-code.js.
+// Changes: allowed origins only; rate limits against email-bombing; "Programmed Learning Service" wording.
 // Self-service access code recovery.
 // Looks up the subscriber by email and resends their access code via Resend.
 //
@@ -11,16 +12,49 @@
 //   RESEND_API_KEY        — your Resend API key
 //   RESEND_FROM_ADDRESS   — your verified sending address
 
+// ── Origin allow-list and best-effort rate limiting (Stage 0 hardening, BDL v4 Decision 38) ──
+const DEFAULT_ORIGINS = [
+  "https://precisionstepstutorials.com",
+  "https://www.precisionstepstutorials.com"
+];
+function allowedOrigins() {
+  return process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map(s => s.trim()).filter(Boolean)
+    : DEFAULT_ORIGINS;
+}
+let reqOrigin = "";   // set at the start of each request (one request at a time per instance)
+const hits = new Map();
+function rateLimited(key, max, windowMs) {
+  const now = Date.now();
+  const recent = (hits.get(key) || []).filter(t => now - t < windowMs);
+  if (recent.length >= max) { hits.set(key, recent); return true; }
+  recent.push(now);
+  hits.set(key, recent);
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) { if (!v.some(t => now - t < windowMs)) hits.delete(k); }
+  }
+  return false;
+}
+function clientIp(event) {
+  return (event.headers["x-nf-client-connection-ip"] ||
+          (event.headers["x-forwarded-for"] || "").split(",")[0] || "unknown").trim();
+}
+
 exports.handler = async (event) => {
 
   // ── CORS preflight ───────────────────────────────────────────────────────────
+  reqOrigin = event.headers["origin"] || event.headers["Origin"] || "";
+  const originOk = allowedOrigins().includes(reqOrigin);
   if (event.httpMethod === "OPTIONS") {
+    if (!originOk) return { statusCode: 403, body: "" };
     return {
-      statusCode: 200,
+      statusCode: 204,
       headers: {
-        "Access-Control-Allow-Origin":  "*",
+        "Access-Control-Allow-Origin":  reqOrigin,
         "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "POST, OPTIONS"
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Max-Age":       "600",
+        "Vary": "Origin"
       },
       body: ""
     };
@@ -29,6 +63,8 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
+
+  if (!originOk) return { statusCode: 403, body: JSON.stringify({ error: { message: "Forbidden." } }) };
 
   // ── Parse request ────────────────────────────────────────────────────────────
   let payload;
@@ -42,7 +78,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const email = (payload.email || "").trim().toLowerCase();
+  const email = (typeof payload.email === "string" ? payload.email : "").trim().toLowerCase().slice(0, 254);
 
   if (!email || !email.includes("@")) {
     return {
@@ -50,6 +86,13 @@ exports.handler = async (event) => {
       headers: corsJson(),
       body: JSON.stringify({ error: { message: "A valid email address is required." } })
     };
+  }
+
+  // Stop email-bombing: 3 sends per address per hour and 10 per IP per hour. Answer 200 either way,
+  // so nothing reveals whether an address is a subscriber.
+  if (rateLimited(`resend-email:${email}`, 3, 60 * 60 * 1000) ||
+      rateLimited(`resend-ip:${clientIp(event)}`, 10, 60 * 60 * 1000)) {
+    return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ ok: true }) };
   }
 
   // ── Look up subscriber in Supabase ───────────────────────────────────────────
@@ -92,7 +135,7 @@ exports.handler = async (event) => {
         <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#2a1f0e;background:#f5f0e8;">
           <p style="font-size:0.7rem;letter-spacing:0.4em;text-transform:uppercase;color:#9a7a45;margin-bottom:0.5rem;">PrecisionSteps Tutorials</p>
           <h1 style="font-size:1.6rem;font-weight:400;margin-bottom:1.5rem;border-bottom:1px solid #b8965a;padding-bottom:1rem;">Your access code</h1>
-          <p style="font-size:1rem;font-weight:300;line-height:1.7;margin-bottom:1.5rem;">Here is your access code for the PrecisionSteps Tutorials Programmed Learning Machine:</p>
+          <p style="font-size:1rem;font-weight:300;line-height:1.7;margin-bottom:1.5rem;">Here is your access code for the PrecisionSteps Tutorials Programmed Learning Service:</p>
           <div style="background:#fff;border:1px solid rgba(155,120,65,0.3);border-radius:4px;padding:1.2rem 1.8rem;font-size:1.5rem;font-family:monospace;letter-spacing:0.15em;color:#2a1f0e;text-align:center;margin-bottom:1.5rem;">
             ${access_code}
           </div>
@@ -128,8 +171,7 @@ exports.handler = async (event) => {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function corsJson() {
-  return {
-    "Content-Type":                "application/json",
-    "Access-Control-Allow-Origin": "*"
-  };
+  const h = { "Content-Type": "application/json", "Vary": "Origin" };
+  if (reqOrigin && allowedOrigins().includes(reqOrigin)) h["Access-Control-Allow-Origin"] = reqOrigin;
+  return h;
 }
