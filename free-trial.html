@@ -486,28 +486,6 @@ function parseJSON(text) {
   if (s === -1 || e === -1) throw new Error('No JSON array found.');
   return JSON.parse(text.slice(s, e + 1));
 }
-function buildFrameGuide(n) {
-  const a = Math.max(1, Math.ceil(n*0.33)), b = Math.max(a+1, Math.ceil(n*0.62));
-  const c = Math.max(b+1, Math.ceil(n*0.82)), d = c+1;
-  let g = `Frames 1-${a}: introduce foundational concepts. `;
-  if (b>a) g += `Frames ${a+1}-${b}: build on them with more detail. `;
-  if (c>b) g += `Frames ${b+1}-${c}: introduce slightly more advanced points. `;
-  if (d<=n) g += `Frames ${d}-${n}: REVIEW frames revisiting earlier concepts with different wording. Mark these is_review: true.`;
-  return g;
-}
-function levelInstructions(l) {
-  if (l==='beginner') return 'Use simple, everyday language. Assume no prior knowledge. Define every technical term on first use. Use relatable analogies. Keep sentences short and clear.';
-  if (l==='advanced') return 'Use precise technical language for an expert audience. Assume solid prior knowledge. Explore nuance and deeper mechanisms.';
-  return 'Use standard subject terminology. Assume basic familiarity. Balance clarity with depth. Briefly define specialised terms but do not dwell on basics.';
-}
-function eduInstructions(edu) {
-  if (edu==='elementary')    return 'The learner is an elementary school student (ages 6-11). Use short sentences, simple everyday words, concrete examples. Avoid jargon.';
-  if (edu==='middle_school') return 'The learner is a middle school student (ages 11-14). Use clear language. Introduce terms but always explain them plainly.';
-  if (edu==='high_school')   return 'The learner is a high school student (ages 14-18). Use standard academic language. Define technical terms properly.';
-  if (edu==='college')       return 'The learner is at college level or beyond (18+). Use full academic vocabulary. Assume strong foundational knowledge.';
-  return '';
-}
-
 // ── SHUFFLE CORRECT ANSWERS ───────────────────────────────────────────────────
 function shuffleCorrectAnswers(frames) {
   let lastIndex = 0;
@@ -532,17 +510,10 @@ function shuffleCorrectAnswers(frames) {
 
 // ── GENERATE ──────────────────────────────────────────────────────────────────
 async function generateCourse(subj, count, level, edu) {
-  const frameGuide = buildFrameGuide(count);
-  const levelNote  = levelInstructions(level);
-  const eduNote    = edu ? eduInstructions(edu) : '';
-  const langNote   = STRINGS[currentLang].langInstruction || '';
-  const audienceNote = eduNote
-    ? `Educational level: ${getEduLabel(edu)}. ${eduNote}\n\nDifficulty calibration: ${levelNote}`
-    : `Difficulty calibration: ${levelNote}`;
-  const prompt = `You are an expert educator using the Skinner programmed instruction method.\nCreate exactly ${count} learning frames on the subject: "${subj}".\n${audienceNote}\n${langNote?"\nLanguage instruction: "+langNote:""}\n\nFrame structure guide: ${frameGuide}\n\nRules:\n- Each frame has a micro-lesson (2-4 sentences, one idea only), a multiple-choice question with exactly 4 options, and the correct answer with a 1-2 sentence explanation.\n- Bold key terms using **double asterisks**.\n- Any frame marked is_review: true should revisit an earlier concept with fresh wording.\n- Set correct_index to 0 for every frame. Answer placement will be randomised automatically after generation.\n\nReturn ONLY a valid JSON array, no preamble, no markdown fences:\n[{"frame":1,"is_review":false,"lesson":"...","question":"...","options":["...","...","...","..."],"correct_index":0,"explanation":"..."}]`;
+  // The prompt is now built on the server (generate.js v3); the browser sends only the settings.
   const res = await fetch('/.netlify/functions/generate', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ accessCode:'TRIAL-FREE', model:'claude-sonnet-5', max_tokens:6000, messages:[{role:'user',content:prompt}], subject:subj, frameCount:count, eduLevel:edu, learnLevel:level, trialEmail })
+    body: JSON.stringify({ accessCode:'TRIAL-FREE', subject:subj, frameCount:count, eduLevel:edu, learnLevel:level, language:currentLang, trialEmail })
   });
   const data = await res.json();
   if (res.status === 403 && data.trialComplete) {
