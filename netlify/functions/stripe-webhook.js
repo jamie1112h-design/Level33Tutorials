@@ -1,5 +1,5 @@
-// PrecisionSteps Tutorials – stripe-webhook.js (version 2, Stage 0 hardening)
-// Deploy as netlify/functions/stripe-webhook.js (the "_v2" is only the download name).
+// PrecisionSteps Tutorials – stripe-webhook.js (version 3, Stage 0 hardening)
+// Deploy as netlify/functions/stripe-webhook.js (the "_v3" is only the download name).
 //
 // What changed from version 1 (BDL v3, Decision 37):
 //   1. A repeat purchase by an email already in `subscribers` no longer fails silently.
@@ -243,7 +243,7 @@ async function sendWelcomeEmail(email, code) {
           </tr>
           <tr>
             <td style="padding-bottom:1.8rem;border-bottom:1px solid rgba(155,120,65,0.2);">
-              <h1 style="margin:0.4rem 0 0;font-size:1.7rem;font-weight:normal;color:#2a1f0e;">Programmed Learning Machine</h1>
+              <h1 style="margin:0.4rem 0 0;font-size:1.7rem;font-weight:normal;color:#2a1f0e;">Programmed Learning Service</h1>
             </td>
           </tr>
           <tr>
@@ -325,7 +325,7 @@ async function sendTrialEndingEmail(email) {
           <tr>
             <td style="padding-top:1.8rem;padding-bottom:1.4rem;">
               <p style="margin:0;font-size:1.05rem;line-height:1.75;color:#2a1f0e;">
-                Your free trial of the PrecisionSteps Tutorials Programmed Learning Machine ends in 3 days. No action is needed – your subscription will continue seamlessly and your card will be charged at that point.
+                Your free trial of the PrecisionSteps Tutorials Programmed Learning Service ends in 3 days. No action is needed – your subscription will continue seamlessly and your card will be charged at that point.
               </p>
             </td>
           </tr>
