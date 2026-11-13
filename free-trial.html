@@ -54,7 +54,7 @@ body::before {
 @keyframes pageIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes spin   { to { transform: rotate(360deg); } }
 .logo-mark   { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.5rem; }
-.brand-title { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:0.7rem; }
+.brand-title { font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:600; white-space:nowrap; color:var(--gold-dark); letter-spacing:0.12em; margin-bottom:2rem; }
 .divider     { width:50px; height:1px; background:var(--gold); margin:0 auto 1.6rem; }
 label.field-label { display:block; font-size:0.78rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.6rem; text-align:left; }
 input[type="text"], input[type="email"] { width:100%; padding:0.95rem 1.1rem; font-family:'Crimson Pro',serif; font-size:1rem; font-weight:300; color:var(--ink); background:rgba(255,255,255,0.72); border:1px solid rgba(155,120,65,0.3); border-radius:2px; outline:none; transition:all 0.2s; margin-bottom:1rem; }
@@ -176,10 +176,8 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
 
 <!-- SCREEN 1: ENTRY -->
 <div id="trialEntryScreen" class="screen active">
-  <div class="logo-mark">PrecisionSteps Tutorials</div>
   <div class="brand-title" data-i18n="brandTitle">PrecisionSteps Tutorials</div>
   <h2 class="entry-heading" data-i18n="entryHeading">Try 2 Free Lessons</h2>
-  <p class="entry-blurb" data-i18n="entryBlurb">PrecisionSteps Tutorials delivers tutorials on any subject of your choice &mdash; one micro-step at a time. Built on B.F.&nbsp;Skinner&rsquo;s proven science of programmed learning, each session takes you from zero to confident understanding in minutes. B.F.&nbsp;Skinner was a Harvard University Professor of Psychology.</p>
   <div class="trial-badge" data-i18n="trialBadge">2 Free Lessons &ndash; No Credit Card Needed</div>
   <div class="divider"></div>
   <label class="field-label" for="trialEmail" data-i18n="emailLabel">Your Email Address</label>
@@ -198,8 +196,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
 
 <!-- SCREEN 2: SUBJECT + SETTINGS -->
 <div id="trialIntroScreen" class="screen">
-  <div class="intro-logo">PrecisionSteps Tutorials</div>
-  <div class="intro-brand" data-i18n="brandTitle">PrecisionSteps Tutorials</div>
+  <div class="brand-title" data-i18n="brandTitle">PrecisionSteps Tutorials</div>
   <h1 class="intro-title" data-i18n="introTitle">What would you<br/>like to learn today?</h1>
   <p class="intro-sub" data-i18n="introSub">One idea at a time. One question at a time.</p>
   <p class="lessons-remaining" id="lessonsRemainingText"></p>
@@ -304,7 +301,6 @@ const STRINGS = {
     htmlLang: "en",
     brandTitle: "PrecisionSteps Tutorials",
     entryHeading: "Try 2 Free Lessons",
-    entryBlurb: "PrecisionSteps Tutorials delivers tutorials on any subject of your choice \u2014 one micro-step at a time. Built on B.F.\u00a0Skinner\u2019s proven science of programmed learning, each session takes you from zero to confident understanding in minutes. B.F.\u00a0Skinner was a Harvard University Professor of Psychology.",
     trialBadge: "2 Free Lessons \u2013 No Credit Card Needed",
     emailLabel: "Your Email Address", emailPlaceholder: "you@example.com",
     ageGateLabel: "I confirm that I am 13 years of age or older, or that I am a parent or guardian accessing this on behalf of a minor.",
@@ -339,7 +335,6 @@ const STRINGS = {
     htmlLang: "fr",
     brandTitle: "Tutoriels PrecisionSteps",
     entryHeading: "Essayez 2 le\u00e7ons gratuites",
-    entryBlurb: "Tutoriels PrecisionSteps offre des tutoriels sur n\u2019importe quel sujet de votre choix \u2014 une micro-\u00e9tape \u00e0 la fois. Con\u00e7u sur la science \u00e9prouv\u00e9e de l\u2019apprentissage programm\u00e9 de B.F.\u00a0Skinner, chaque session vous am\u00e8ne de z\u00e9ro \u00e0 une compr\u00e9hension confiante en quelques minutes. B.F.\u00a0Skinner \u00e9tait professeur de psychologie \u00e0 l\u2019Universit\u00e9 Harvard.",
     trialBadge: "2 le\u00e7ons gratuites \u2013 Sans carte de cr\u00e9dit",
     emailLabel: "Votre adresse courriel", emailPlaceholder: "vous@exemple.com",
     ageGateLabel: "Je confirme avoir 13 ans ou plus, ou \u00eatre un parent ou tuteur acc\u00e9dant \u00e0 ce service au nom d\u2019un mineur.",
@@ -374,7 +369,6 @@ const STRINGS = {
     htmlLang: "es",
     brandTitle: "Tutoriales PrecisionSteps",
     entryHeading: "Pruebe 2 lecciones gratis",
-    entryBlurb: "Tutoriales PrecisionSteps ofrece tutoriales sobre cualquier tema de su elecci\u00f3n \u2014 un micro-paso a la vez. Basado en la comprobada ciencia del aprendizaje programado de B.F.\u00a0Skinner, cada sesi\u00f3n lo lleva de cero a una comprensi\u00f3n s\u00f3lida en minutos. B.F.\u00a0Skinner fue Profesor de Psicolog\u00eda en la Universidad de Harvard.",
     trialBadge: "2 lecciones gratis \u2013 Sin tarjeta de cr\u00e9dito",
     emailLabel: "Su direcci\u00f3n de correo electr\u00f3nico", emailPlaceholder: "usted@ejemplo.com",
     ageGateLabel: "Confirmo que tengo 13 a\u00f1os o m\u00e1s, o que soy padre, madre o tutor que accede en nombre de un menor.",
