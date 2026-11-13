@@ -1,5 +1,7 @@
-// PrecisionSteps Tutorials – generate.js (version 3, Stage 0 hardening)
-// Deploy this file to Netlify as netlify/functions/generate.js (the "_v3" is only the download name).
+// PrecisionSteps Tutorials – generate.js (version 4, free trial reduced to 2 lessons)
+// Deploy this file to Netlify as netlify/functions/generate.js (the "_v4" is only the download name).
+//
+// New in version 4: the free trial is now 2 lessons (FREE_LIMIT = 2, and the trial-complete message says 2).
 //
 // What changed from version 1 (BDL v3, Decision 35):
 //   1. CORS is limited to your own site(s) instead of "*", and requests from other origins are refused.
@@ -38,7 +40,7 @@ const MIN_FRAMES       = 5;        // the page slider runs 5 to 20
 const MAX_FRAMES       = 20;
 const EDU_LEVELS       = ["", "elementary", "middle_school", "high_school", "college"];
 const LEARN_LEVELS     = ["beginner", "intermediate", "advanced"];
-const FREE_LIMIT       = 5;
+const FREE_LIMIT       = 2;
 const LANGUAGES        = ["en", "fr", "es"];
 
 // ── Best-effort rate limiting (memory of one warm function instance) ─────────────
@@ -176,7 +178,7 @@ exports.handler = async (event) => {
       const lessonsUsed = upsertRows[0].lessons_used || 0;
 
       if (lessonsUsed >= FREE_LIMIT) {
-        return fail(403, "Your 5 free lessons are complete. Subscribe to continue.", { trialComplete: true });
+        return fail(403, "Your 2 free lessons are complete. Subscribe to continue.", { trialComplete: true });
       }
 
       // Claim the lesson first. The filter on the old value makes this a compare-and-set,
