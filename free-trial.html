@@ -81,8 +81,8 @@ button { cursor:pointer; border:none; font-family:'Playfair Display',serif; bord
 .intro-logo  { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.4rem; }
 .intro-brand { font-family:'Playfair Display',serif; font-size:1rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:1.2rem; }
 .intro-title { font-family:'Playfair Display',serif; white-space:nowrap; font-size:1.625rem; font-weight:400; color:var(--ink); line-height:1.18; margin-bottom:0.6rem; }
-.intro-sub   { font-size:1.275rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:2rem; }
-.lessons-remaining { font-size:1.125rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:1.6rem; }
+.intro-sub   { font-size:1.275rem; font-weight:300; font-style:normal; color:#6b5535; margin-bottom:2rem; }
+.lessons-remaining { font-size:1.25rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:1.6rem; }
 .course-options { width:100%; max-width:480px; margin:0 auto 1.6rem; display:flex; flex-direction:column; gap:1.4rem; }
 .option-group { text-align:left; }
 .option-group-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.7rem; }
@@ -328,7 +328,7 @@ const STRINGS = {
     subscribeUnlimitedBtn: "Subscribe for Unlimited Access \u00a0\u2192",
     settingsSummary: (n,lv,ed) => `${n}-frame \u00b7 ${lv}${ed?" \u00b7 "+ed:""} lesson`,
     loadingText: (n,lv,s) => `Composing your ${n}-frame ${lv} lesson on \u201c${s}\u201d\u2026`,
-    lessonsRemaining: (n) => `${n} free ${n===1?"lesson":"lessons"} remaining in your trial`,
+    lessonsRemaining: (n) => `${n} free ${n===1?"lesson":"lessons"} remaining in your trial.`,
     langInstruction: ""
   },
   fr: {
@@ -362,7 +362,7 @@ const STRINGS = {
     subscribeUnlimitedBtn: "S\u2019abonner pour un acc\u00e8s illimit\u00e9 \u00a0\u2192",
     settingsSummary: (n,lv,ed) => `${n} cadres \u00b7 ${lv}${ed?" \u00b7 "+ed:""}`,
     loadingText: (n,lv,s) => `Composition de votre le\u00e7on de ${n} cadres \u2014 ${lv} \u2014 sur \u00ab\u00a0${s}\u00a0\u00bb\u2026`,
-    lessonsRemaining: (n) => `${n} le\u00e7on${n===1?"":"s"} gratuite${n===1?"":"s"} restante${n===1?"":"s"} dans votre essai`,
+    lessonsRemaining: (n) => `${n} le\u00e7on${n===1?"":"s"} gratuite${n===1?"":"s"} restante${n===1?"":"s"} dans votre essai.`,
     langInstruction: "Deliver this entire course in Canadian French (Qu\u00e9b\u00e9cois). Use natural Qu\u00e9b\u00e9cois vocabulary and phrasing throughout."
   },
   es: {
@@ -396,7 +396,7 @@ const STRINGS = {
     subscribeUnlimitedBtn: "Suscribirse para acceso ilimitado \u00a0\u2192",
     settingsSummary: (n,lv,ed) => `${n} marcos \u00b7 ${lv}${ed?" \u00b7 "+ed:""}`,
     loadingText: (n,lv,s) => `Componiendo su lecci\u00f3n de ${n} marcos \u2014 ${lv} \u2014 sobre \u00ab${s}\u00bb\u2026`,
-    lessonsRemaining: (n) => `${n} lecci\u00f3n${n===1?"":"es"} gratuita${n===1?"":"s"} restante${n===1?"":"s"} en su prueba`,
+    lessonsRemaining: (n) => `${n} lecci\u00f3n${n===1?"":"es"} gratuita${n===1?"":"s"} restante${n===1?"":"s"} en su prueba.`,
     langInstruction: "Deliver this entire course in Latin American Spanish. Use natural, clear Spanish throughout."
   }
 };
