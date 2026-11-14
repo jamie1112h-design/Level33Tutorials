@@ -80,9 +80,9 @@ button { cursor:pointer; border:none; font-family:'Playfair Display',serif; bord
 #trialIntroScreen { flex-direction:column; align-items:center; justify-content:center; text-align:center; max-width:600px; margin:0 auto; }
 .intro-logo  { font-family:'Playfair Display',serif; font-size:0.65rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold-dark); margin-bottom:0.4rem; }
 .intro-brand { font-family:'Playfair Display',serif; font-size:1rem; font-weight:400; color:var(--ink); letter-spacing:0.12em; margin-bottom:1.2rem; }
-.intro-title { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:400; color:var(--ink); line-height:1.18; margin-bottom:0.6rem; }
-.intro-sub   { font-size:1.15rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:2rem; }
-.lessons-remaining { font-size:1rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:1.6rem; }
+.intro-title { font-family:'Playfair Display',serif; white-space:nowrap; font-size:1.625rem; font-weight:400; color:var(--ink); line-height:1.18; margin-bottom:0.6rem; }
+.intro-sub   { font-size:1.275rem; font-weight:300; font-style:italic; color:#6b5535; margin-bottom:2rem; }
+.lessons-remaining { font-size:1.125rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:1.6rem; }
 .course-options { width:100%; max-width:480px; margin:0 auto 1.6rem; display:flex; flex-direction:column; gap:1.4rem; }
 .option-group { text-align:left; }
 .option-group-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:0.7rem; }
@@ -160,7 +160,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
 .complete-trial-note { font-size:1rem; font-weight:300; font-style:italic; color:var(--gold-dark); margin-bottom:2rem; }
 @media (max-width:600px) {
   .card { padding:1.8rem 1.4rem; }
-  .intro-title { font-size:1.5rem; }
+  .intro-title { font-size:1.625rem; }
   .upsell-card, .complete-card { padding:2rem 1.4rem; }
   .lang-toggle { top:0.7rem; right:0.7rem; }
 }
@@ -197,7 +197,7 @@ input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.15); }
 <!-- SCREEN 2: SUBJECT + SETTINGS -->
 <div id="trialIntroScreen" class="screen">
   <div class="brand-title" data-i18n="brandTitle">PrecisionSteps Tutorials</div>
-  <h1 class="intro-title" data-i18n="introTitle">What would you<br/>like to learn today?</h1>
+  <h1 class="intro-title" data-i18n="introTitle">What would you like to learn today?</h1>
   <p class="intro-sub" data-i18n="introSub">One idea at a time. One question at a time.</p>
   <p class="lessons-remaining" id="lessonsRemainingText"></p>
   <div class="divider"></div>
@@ -307,7 +307,7 @@ const STRINGS = {
     beginTrialBtn: "Begin Free Trial \u00a0\u2192",
     alreadySubscriber: "Already a subscriber?", signInLink: "Sign in here \u00a0\u2192",
     footerPrivacy: "Privacy Policy", footerTerms: "Terms of Use",
-    introTitle: "What would you<br/>like to learn today?",
+    introTitle: "What would you like to learn today?",
     introSub: "One idea at a time. One question at a time.",
     subjectLabel: "Subject", subjectPlaceholder: "e.g. Molarity, The French Revolution, Options Trading\u2026",
     lessonLengthLabel: "Lesson Length", framesWord: "frames",
@@ -341,7 +341,7 @@ const STRINGS = {
     beginTrialBtn: "Commencer l\u2019essai gratuit \u00a0\u2192",
     alreadySubscriber: "D\u00e9j\u00e0 abonn\u00e9\u00b7e\u00a0?", signInLink: "Se connecter ici \u00a0\u2192",
     footerPrivacy: "Politique de confidentialit\u00e9", footerTerms: "Conditions d\u2019utilisation",
-    introTitle: "Qu\u2019aimeriez-vous<br/>apprendre aujourd\u2019hui?",
+    introTitle: "Qu\u2019aimeriez-vous apprendre aujourd\u2019hui?",
     introSub: "Une id\u00e9e \u00e0 la fois. Une question \u00e0 la fois.",
     subjectLabel: "Sujet", subjectPlaceholder: "ex. La photosynth\u00e8se, La R\u00e9volution fran\u00e7aise, La bourse\u2026",
     lessonLengthLabel: "Dur\u00e9e de la le\u00e7on", framesWord: "cadres",
@@ -375,7 +375,7 @@ const STRINGS = {
     beginTrialBtn: "Comenzar prueba gratuita \u00a0\u2192",
     alreadySubscriber: "\u00bfYa es suscriptor?", signInLink: "Iniciar sesi\u00f3n aqu\u00ed \u00a0\u2192",
     footerPrivacy: "Pol\u00edtica de privacidad", footerTerms: "T\u00e9rminos de uso",
-    introTitle: "\u00bfQu\u00e9 le gustar\u00eda<br/>aprender hoy?",
+    introTitle: "\u00bfQu\u00e9 le gustar\u00eda aprender hoy?",
     introSub: "Una idea a la vez. Una pregunta a la vez.",
     subjectLabel: "Tema", subjectPlaceholder: "ej. Fotos\u00edntesis, La Revoluci\u00f3n Francesa, Bolsa de valores\u2026",
     lessonLengthLabel: "Duraci\u00f3n de la lecci\u00f3n", framesWord: "marcos",
