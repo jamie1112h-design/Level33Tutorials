@@ -1,28 +1,25 @@
-// PrecisionSteps Tutorials – generate.js (version 4, free trial reduced to 2 lessons)
-// Deploy this file to Netlify as netlify/functions/generate.js (the "_v4" is only the download name).
+// PrecisionSteps Tutorials – generate.js (version 5, QuVive bridge). Deploy as netlify/functions/generate.js
+// (the "_v5" is only the download name).
 //
-// New in version 4: the free trial is now 2 lessons (FREE_LIMIT = 2, and the trial-complete message says 2).
-//
-// What changed from version 1 (BDL v3, Decision 35):
-//   1. CORS is limited to your own site(s) instead of "*", and requests from other origins are refused.
-//   2. The browser can no longer choose the model. The model is fixed on the server.
-//   3. max_tokens is clamped (never above 8000), so a caller cannot ask for huge outputs.
-//   4. Request size, message count, field lengths, frame count and language are validated.
-//   5. Best-effort rate limits per access code and per IP address (per warm server instance).
-//   6. Free trial: valid-email check, upsert fixed with on_conflict=email, and the lesson is
-//      claimed BEFORE generation (atomic compare-and-set) and refunded if generation fails.
-//
-// New in version 3 (BDL v4, Decision 38): THE PROMPT IS BUILT ON THE SERVER.
-//   The browser now sends only: accessCode, subject, frameCount, eduLevel, learnLevel, language
-//   (and trialEmail for the free trial). Any `messages`, `model` or `max_tokens` it sends are ignored.
-//   The prompt text is the one from index.html. Requires the matching index_v2.html and
-//   free-trial_v2.html (deploy all three together; the old pages send messages that are now ignored,
-//   so they would still work for subscribers but trial lessons would not carry the language).
+// New in version 5 (2026-11-20): a learner signs in with an emailed link (Supabase Auth, verified email) and every
+// course is gated by accounts-grh (service-check, service id "precisionsteps"): subscribers have no cap, everyone
+// else gets 2 free lessons, counted and spent in accounts-grh. Access codes, TRIAL-FREE, the subscribers lookup and
+// the trial_users counter are no longer used here. The prompt, model, token limit and validation are unchanged.
+//   1. Origin check, body size and field validation (as before).
+//   2. Identity: the browser sends "Authorization: Bearer <token>"; this function asks Supabase Auth who it is and
+//      requires a confirmed email.
+//   3. Plan gate: service-check "check" BEFORE any AI call (counts toward the hourly cap, spends nothing).
+//   4. A course is accepted only if the reply is non-empty and did not stop at the token limit; otherwise the learner
+//      is asked to try again and nothing is spent.
+//   5. After a whole course is built: service-check "spend" (one free lesson; never for subscribers or the founder),
+//      and the session is logged by learner_email.
 //
 // Required environment variables (Netlify dashboard):
 //   ANTHROPIC_API_KEY      – your Anthropic key (sk-ant-...)
-//   SUPABASE_URL           – your Supabase project URL
-//   SUPABASE_SERVICE_KEY   – your Supabase secret key (server-side only)
+//   SUPABASE_URL           – the PrecisionSteps project URL
+//   SUPABASE_SERVICE_KEY   – the project's secret key (server-side only)
+//   BRIDGE_SECRET          – the shared secret, same value as in accounts-grh
+//   ACCOUNTS_URL           – https://odozwhmremuvktaocctd.supabase.co
 // Optional environment variables:
 //   ALLOWED_ORIGINS        – comma-separated list of allowed origins
 //                            (default: https://precisionstepstutorials.com and https://www.precisionstepstutorials.com)
@@ -40,8 +37,8 @@ const MIN_FRAMES       = 5;        // the page slider runs 5 to 20
 const MAX_FRAMES       = 20;
 const EDU_LEVELS       = ["", "elementary", "middle_school", "high_school", "college"];
 const LEARN_LEVELS     = ["beginner", "intermediate", "advanced"];
-const FREE_LIMIT       = 2;
 const LANGUAGES        = ["en", "fr", "es"];
+const SERVICE_ID       = "precisionsteps";
 
 // ── Best-effort rate limiting (memory of one warm function instance) ─────────────
 const hits = new Map();
@@ -55,6 +52,52 @@ function rateLimited(key, max, windowMs) {
     for (const [k, v] of hits) { if (!v.some(t => now - t < windowMs)) hits.delete(k); }
   }
   return false;
+}
+
+// ── QuVive bridge (accounts-grh service-check) ───────────────────────────────────
+async function callServiceCheck(action, email) {
+  const base = process.env.ACCOUNTS_URL;
+  const secret = process.env.BRIDGE_SECRET;
+  if (!base || !secret) return { status: 500, body: { allowed: false, reason: "not_configured" } };
+  try {
+    const res = await fetch(base + "/functions/v1/service-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-bridge-secret": secret },
+      body: JSON.stringify({ action, service_id: SERVICE_ID, email }),
+      signal: AbortSignal.timeout(8000)
+    });
+    let body = null;
+    try { body = await res.json(); } catch { /* empty */ }
+    return { status: res.status, body };
+  } catch (e) {
+    console.error("[precisionsteps-bridge] service-check unreachable:", e);
+    return { status: 502, body: { allowed: false, reason: "check_failed" } };
+  }
+}
+
+// Spend one free lesson after a whole course was built. Never throws; a failure is logged.
+async function spendTrialUse(email) {
+  const r = await callServiceCheck("spend", email);
+  if (r.status !== 200) console.error("[precisionsteps-bridge] spend failed:", r.status, JSON.stringify(r.body));
+}
+
+// Who is this token? Returns the confirmed, lower-case email or null.
+async function verifiedEmail(authHeader) {
+  const m = /^Bearer\s+(\S+)$/i.exec(authHeader || "");
+  if (!m) return null;
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { "apikey": process.env.SUPABASE_SERVICE_KEY, "Authorization": `Bearer ${m[1]}` },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) return null;
+    const u = await res.json();
+    if (!u || !u.email || !(u.email_confirmed_at || u.confirmed_at)) return null;
+    return String(u.email).trim().toLowerCase();
+  } catch (e) {
+    console.error("Auth lookup failed:", e);
+    return null;
+  }
 }
 
 exports.handler = async (event) => {
@@ -72,7 +115,7 @@ exports.handler = async (event) => {
       statusCode: 204,
       headers: {
         "Access-Control-Allow-Origin":  origin,
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Max-Age":       "600",
         "Vary": "Origin"
@@ -113,27 +156,42 @@ exports.handler = async (event) => {
 
   const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
-  const codeClean   = str(payload.accessCode, 40).toUpperCase();
   const subject     = str(payload.subject, 200).replace(/\s+/g, " ").replace(/["\u201C\u201D]/g, "'");
   const eduLevel    = EDU_LEVELS.includes(payload.eduLevel) ? payload.eduLevel : "";
   const learnLevel  = LEARN_LEVELS.includes(payload.learnLevel) ? payload.learnLevel : "intermediate";
   const language    = LANGUAGES.includes(payload.language) ? payload.language : "en";
   const frameCount  = Math.min(Math.max(parseInt(payload.frameCount, 10) || 10, MIN_FRAMES), MAX_FRAMES);
 
-  if (!codeClean) return fail(401, "No access code provided.");
   if (subject.length < 2) return fail(400, "Please enter a subject.");
+
+  // ── Identity: a signed-in learner with a verified email ──────────────────────
+  const email = await verifiedEmail(event.headers["authorization"] || event.headers["Authorization"]);
+  if (!email) return fail(401, "Please sign in to continue.");
+
+  // Best-effort limits: 60 courses per address per hour, 80 per IP per day, 3 per IP per minute.
+  if (rateLimited(`user:${email}`, 60, 60 * 60 * 1000) ||
+      rateLimited(`ip:${ip}`, 80, 24 * 60 * 60 * 1000) ||
+      rateLimited(`burst:${ip}`, 3, 60 * 1000)) {
+    return fail(429, "Too many requests. Please try again later.");
+  }
+
+  // ── Plan gate: accounts-grh decides before any AI money is spent ─────────────
+  const gate = await callServiceCheck("check", email);
+  if (gate.status !== 200 || gate.body?.allowed !== true) {
+    if (gate.body?.reason === "no_access") {
+      return fail(403, "Your free lessons are used. Please subscribe on QuVive to continue.", { trialComplete: true });
+    }
+    if (gate.body?.reason === "rate_limited") return fail(429, "Too many requests. Please try again later.");
+    return fail(502, "Could not process your request. Please try again.");
+  }
+  const isTrial = gate.body.access !== "subscribed";
+  const triesBefore = typeof gate.body.tries_left === "number" ? gate.body.tries_left : 1;
 
   const messages = [{ role: "user", content: buildPrompt(subject, frameCount, learnLevel, eduLevel, language) }];
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-  const sbHeaders = {
-    "apikey":        supabaseKey,
-    "Authorization": `Bearer ${supabaseKey}`,
-    "Content-Type":  "application/json"
-  };
-
-  async function callAnthropic() {
+  // ── Generate ─────────────────────────────────────────────────────────────────
+  let result;
+  try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -148,112 +206,30 @@ exports.handler = async (event) => {
         messages
       })
     });
-    const data = await res.json();
-    return { ok: res.ok, status: res.status, data };
-  }
-
-  // ── Free trial path ──────────────────────────────────────────────────────────
-  // lessons_used in Supabase is the server-side source of truth.
-  if (codeClean === "TRIAL-FREE") {
-    const emailClean = str(payload.trialEmail, 254).toLowerCase();
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailClean);
-    if (!emailOk) return fail(400, "A valid email address is required for the free trial.");
-
-    // 10 trial generations per IP per day (best effort), plus a short burst limit.
-    if (rateLimited(`trial-ip:${ip}`, 10, 24 * 60 * 60 * 1000) ||
-        rateLimited(`trial-burst:${ip}`, 3, 60 * 1000)) {
-      return fail(429, "Too many requests. Please try again later.");
-    }
-
-    try {
-      // Create the trial user if new; refresh last_seen_at if returning.
-      const upsertRes = await fetch(`${supabaseUrl}/rest/v1/trial_users?on_conflict=email`, {
-        method: "POST",
-        headers: { ...sbHeaders, "Prefer": "resolution=merge-duplicates,return=representation" },
-        body: JSON.stringify({ email: emailClean, last_seen_at: new Date().toISOString() })
-      });
-      const upsertRows = await upsertRes.json();
-      if (!Array.isArray(upsertRows) || upsertRows.length === 0) throw new Error("Upsert returned no rows.");
-
-      const lessonsUsed = upsertRows[0].lessons_used || 0;
-
-      if (lessonsUsed >= FREE_LIMIT) {
-        return fail(403, "Your 2 free lessons are complete. Subscribe to continue.", { trialComplete: true });
-      }
-
-      // Claim the lesson first. The filter on the old value makes this a compare-and-set,
-      // so two simultaneous requests cannot both use the same remaining lesson.
-      const claimRes = await fetch(
-        `${supabaseUrl}/rest/v1/trial_users?email=eq.${encodeURIComponent(emailClean)}&lessons_used=eq.${lessonsUsed}`,
-        {
-          method: "PATCH",
-          headers: { ...sbHeaders, "Prefer": "return=representation" },
-          body: JSON.stringify({ lessons_used: lessonsUsed + 1 })
-        }
-      );
-      const claimRows = await claimRes.json();
-      if (!Array.isArray(claimRows) || claimRows.length === 0) {
-        return fail(409, "Another lesson is already being prepared. Please wait a moment and try again.");
-      }
-
-      const result = await callAnthropic();
-
-      if (!result.ok) {
-        // Generation failed: give the lesson back.
-        await fetch(
-          `${supabaseUrl}/rest/v1/trial_users?email=eq.${encodeURIComponent(emailClean)}&lessons_used=eq.${lessonsUsed + 1}`,
-          { method: "PATCH", headers: sbHeaders, body: JSON.stringify({ lessons_used: lessonsUsed }) }
-        ).catch(() => {});
-        return { statusCode: result.status, headers: cors(), body: JSON.stringify({ ...result.data, lessonsUsed }) };
-      }
-
-      return { statusCode: 200, headers: cors(), body: JSON.stringify({ ...result.data, lessonsUsed: lessonsUsed + 1 }) };
-
-    } catch (err) {
-      console.error("Trial path error:", err);
-      return fail(502, "Could not process your trial request. Please try again.");
-    }
-  }
-
-  // ── Subscriber path ──────────────────────────────────────────────────────────
-  if (!/^PST-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codeClean)) {
-    return fail(401, "Invalid access code. Visit precisionstepstutorials.com to purchase access.");
-  }
-
-  // 40 lessons per code per hour and 60 per IP per hour (best effort).
-  if (rateLimited(`code:${codeClean}`, 40, 60 * 60 * 1000) ||
-      rateLimited(`ip:${ip}`, 60, 60 * 60 * 1000)) {
-    return fail(429, "Too many requests. Please try again later.");
-  }
-
-  let subscriberId = null;
-  try {
-    const supaRes = await fetch(
-      `${supabaseUrl}/rest/v1/subscribers?access_code=eq.${encodeURIComponent(codeClean)}&select=id,status`,
-      { headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` } }
-    );
-    const rows = await supaRes.json();
-
-    if (!Array.isArray(rows) || rows.length === 0) {
-      return fail(401, "Invalid access code. Visit precisionstepstutorials.com to purchase access.");
-    }
-    if (rows[0].status !== "active") {
-      return fail(403, "Your subscription is no longer active. Please renew at precisionstepstutorials.com.");
-    }
-    subscriberId = rows[0].id;
+    result = { ok: res.ok, status: res.status, data: await res.json() };
   } catch (err) {
-    console.error("Supabase validation error:", err);
-    return fail(500, "Could not verify access. Please try again.");
+    console.error("Anthropic proxy error:", err);
+    return fail(502, "Could not reach the AI service. Please try again.");
   }
 
-  // ── Log session to Supabase (non-fatal) ──────────────────────────────────────
+  const text = result.ok ? (result.data.content || []).map(b => b.text || "").join("").trim() : "";
+  if (!result.ok || !text || result.data.stop_reason === "max_tokens") {
+    if (!result.ok) console.error("Anthropic error:", result.status, JSON.stringify(result.data).slice(0, 300));
+    return fail(502, "Something didn't come through on our end. Please try again.");
+  }
+
+  // A whole course is built: now (and only now) spend one free lesson and log the session.
+  await spendTrialUse(email);
+
   let sessionId = null;
   try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
     const sessionRes = await fetch(`${supabaseUrl}/rest/v1/sessions`, {
       method: "POST",
-      headers: { ...sbHeaders, "Prefer": "return=representation" },
+      headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}`, "Content-Type": "application/json", "Prefer": "return=representation" },
       body: JSON.stringify({
-        subscriber_id: subscriberId,
+        learner_email: email,
         subject,
         frame_count:   frameCount,
         edu_level:     eduLevel,
@@ -268,14 +244,15 @@ exports.handler = async (event) => {
     console.error("Session logging error:", err);
   }
 
-  // ── Generate ─────────────────────────────────────────────────────────────────
-  try {
-    const result = await callAnthropic();
-    return { statusCode: result.status, headers: cors(), body: JSON.stringify({ ...result.data, sessionId }) };
-  } catch (err) {
-    console.error("Anthropic proxy error:", err);
-    return fail(502, "Could not reach the AI service. Please try again.");
-  }
+  return {
+    statusCode: 200,
+    headers: cors(),
+    body: JSON.stringify({
+      ...result.data,
+      sessionId,
+      ...(isTrial ? { triesLeft: Math.max(0, triesBefore - 1) } : { subscriber: true })
+    })
+  };
 };
 
 // ── Prompt (moved from index.html; the text is unchanged except the final rule) ──

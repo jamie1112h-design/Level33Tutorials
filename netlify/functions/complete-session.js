@@ -1,15 +1,7 @@
-// PrecisionSteps Tutorials – complete-session.js (version 2). Deploy as netlify/functions/complete-session.js.
-// Changes: allowed origins only; sessionId must be a UUID; score fields validated and size-limited;
-// best-effort rate limit per IP.
-// Called by the client when a course is completed.
-// Updates the session row: sets completed = true.
-// Optionally accepts frame_scores and score_pct for in-lesson scoring.
-//
-// Required environment variables:
-//   SUPABASE_URL          — your Supabase project URL
-//   SUPABASE_SERVICE_KEY  — your Supabase secret key (server-side only)
-
-// ── Origin allow-list and best-effort rate limiting (Stage 0 hardening, BDL v4 Decision 38) ──
+// PrecisionSteps Tutorials – complete-session.js (version 3, QuVive bridge). Deploy as netlify/functions/complete-session.js.
+// Change: the learner must be signed in (Authorization: Bearer <token>, confirmed email), and only the learner who
+// owns the session (sessions.learner_email) can mark it complete.
+// Required environment variables: SUPABASE_URL, SUPABASE_SERVICE_KEY. Optional: ALLOWED_ORIGINS.
 const DEFAULT_ORIGINS = [
   "https://precisionstepstutorials.com",
   "https://www.precisionstepstutorials.com"
@@ -48,7 +40,7 @@ exports.handler = async (event) => {
       statusCode: 204,
       headers: {
         "Access-Control-Allow-Origin":  reqOrigin,
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Max-Age":       "600",
         "Vary": "Origin"
@@ -81,6 +73,26 @@ exports.handler = async (event) => {
     };
   }
 
+  // Who is asking? A signed-in learner with a confirmed email.
+  const authHeader = event.headers["authorization"] || event.headers["Authorization"] || "";
+  const bm = /^Bearer\s+(\S+)$/i.exec(authHeader);
+  let learnerEmail = null;
+  if (bm) {
+    try {
+      const ures = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+        headers: { "apikey": process.env.SUPABASE_SERVICE_KEY, "Authorization": `Bearer ${bm[1]}` },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (ures.ok) {
+        const u = await ures.json();
+        if (u && u.email && (u.email_confirmed_at || u.confirmed_at)) learnerEmail = String(u.email).trim().toLowerCase();
+      }
+    } catch (e) { console.error("Auth lookup failed:", e); }
+  }
+  if (!learnerEmail) {
+    return { statusCode: 401, headers: corsJson(), body: JSON.stringify({ error: { message: "Please sign in to continue." } }) };
+  }
+
   const { sessionId, frameScores, scorePct } = payload;
 
   if (typeof sessionId !== "string" ||
@@ -109,7 +121,7 @@ exports.handler = async (event) => {
 
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/sessions?id=eq.${encodeURIComponent(sessionId)}`,
+      `${supabaseUrl}/rest/v1/sessions?id=eq.${encodeURIComponent(sessionId)}&learner_email=eq.${encodeURIComponent(learnerEmail)}`,
       {
         method: "PATCH",
         headers: {
