@@ -249,7 +249,18 @@ function enterIfSignedIn(session){
   if(key && key.classList.contains("active")){
     showScreen("introScreen");
     const el=document.getElementById("subjectInput"); if(el) el.focus();
+    fetchTrialStatus(session);
   }
+}
+// Free-lesson count on arrival (Decision 53.10): a read-only question to the server; nothing is spent. A subscriber sees no count.
+let statusAsked=false;
+function fetchTrialStatus(session){
+  if(statusAsked||lastTriesLeft!==null||!session) return;
+  statusAsked=true;
+  fetch("/.netlify/functions/generate",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({action:"status"})})
+    .then(r=>r.json())
+    .then(d=>{ if(d&&typeof d.triesLeft==="number"&&lastTriesLeft===null){ lastTriesLeft=d.triesLeft; renderTrialStatus(); } })
+    .catch(()=>{ statusAsked=false; /* the count is a nicety; the server still decides */ });
 }
 sb.auth.getSession().then(({data})=>enterIfSignedIn(data&&data.session));
 sb.auth.onAuthStateChange((ev,session)=>{ if(ev==="SIGNED_IN"||ev==="INITIAL_SESSION") enterIfSignedIn(session); });
@@ -413,7 +424,7 @@ function updateSettingsSummary(){
 
 async function signOut(){
   try{ await sb.auth.signOut(); }catch(e){}
-  lastTriesLeft=null;
+  lastTriesLeft=null; statusAsked=false;
   signinEmail.value="";
   signinBtn.disabled=true;
   signinError.textContent="";
