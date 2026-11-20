@@ -1,5 +1,9 @@
-// PrecisionSteps Tutorials – generate.js (version 5, QuVive bridge). Deploy as netlify/functions/generate.js
-// (the "_v5" is only the download name).
+// PrecisionSteps Tutorials – generate.js (version 6, QuVive bridge). Deploy as netlify/functions/generate.js
+// (the "_v6" is only the download name).
+//
+// New in version 6 (2026-11-20): read-only request { action: "status" } (Decision 53.10) returns { triesLeft } or
+// { subscriber: true } so the page can show the free-lesson count on arrival. It asks service-check "status" (nothing
+// counted, nothing spent). Everything else is as version 5.
 //
 // New in version 5 (2026-11-20): a learner signs in with an emailed link (Supabase Auth, verified email) and every
 // course is gated by accounts-grh (service-check, service id "precisionsteps"): subscribers have no cap, everyone
@@ -155,6 +159,17 @@ exports.handler = async (event) => {
   catch { return fail(400, "Invalid request body."); }
 
   const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+  // Status (v6): free-lesson count on arrival. Read-only.
+  if (payload.action === "status") {
+    const who = await verifiedEmail(event.headers["authorization"] || event.headers["Authorization"]);
+    if (!who) return fail(401, "Please sign in to continue.");
+    if (rateLimited(`status:${ip}`, 30, 60 * 1000)) return fail(429, "Too many requests. Please try again later.");
+    const st = await callServiceCheck("status", who);
+    if (st.status !== 200 || !st.body || !st.body.access) return fail(502, "Could not process your request. Please try again.");
+    return { statusCode: 200, headers: cors(),
+      body: JSON.stringify(st.body.access === "subscribed" ? { subscriber: true } : { triesLeft: Math.max(0, Number(st.body.tries_left) || 0) }) };
+  }
 
   const subject     = str(payload.subject, 200).replace(/\s+/g, " ").replace(/["\u201C\u201D]/g, "'");
   const eduLevel    = EDU_LEVELS.includes(payload.eduLevel) ? payload.eduLevel : "";
